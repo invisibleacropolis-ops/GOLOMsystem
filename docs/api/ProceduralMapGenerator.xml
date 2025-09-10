@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ProceduralMapGenerator" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="generate">
+			<return type="LogicGridMap" />
+			<param index="0" name="params" type="Dictionary" />
+			<description>
+				Generates a LogicGridMap using layered noise to create height, terrain and connected road features. The first tag controls rendering while subsequent tags describe underlying terrain (e.g. `"grass","dirt"`).  Params may include: - `width` (int) - `height` (int) - `seed` (String) used for deterministic output - `terrain` (String) selects a preset profile
+			</description>
+		</method>
+		<method name="_carve_roads">
+			<return type="void" />
+			<param index="0" name="map" type="LogicGridMap" />
+			<description>
+				Carves a simple cross-shaped road network so paths remain connected.
+			</description>
+		</method>
+		<method name="run_tests">
+			<return type="Dictionary" />
+			<description>
+				Lightweight self-test for CI usage.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="LogicGridMap" value="&lt;Object&gt;">
+		</constant>
+	</constants>
+</class>

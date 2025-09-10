@@ -1,0 +1,38 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="RPGBackendModules"
+run/main_scene="res://scenes/Root.tscn"
+config/features=PackedStringArray("4.4", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+WorkspaceDebugger="*res://scripts/core/workspace_debugger.gd"
+AsciiGateway="*res://scripts/autoload/ascii_gateway.gd"
+AsciiKeybinds="*res://scripts/autoload/ascii_keybinds.gd"
+
+[display]
+
+window/size/width=1280
+window/size/height=720
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/ai_assistant_hub/plugin.cfg", "res://addons/tile_to_gridmap/plugin.cfg")
+
+[plugins]
+
+ai_assistant_hub/llm_api="gemini_api"
+ai_assistant_hub/preferences/thinking_target=0
+ai_assistant_hub/preferences/skip_greeting=false
+ai_assistant_hub/preferences/always_scroll_to_bottom=false

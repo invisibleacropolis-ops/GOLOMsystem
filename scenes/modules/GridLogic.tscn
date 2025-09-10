@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://gridlogic"]
+
+[ext_resource type="Script" path="res://scripts/modules/grid_logic.gd" id="1"]
+
+[node name="GridLogic" type="Node"]
+script = ExtResource("1")
+

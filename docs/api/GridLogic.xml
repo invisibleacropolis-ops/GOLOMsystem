@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="GridLogic" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="log_event">
+			<return type="void" />
+			<param index="0" name="t" type="String" />
+			<param index="1" name="actor" type="Object" default="null" />
+			<param index="2" name="pos" type="Variant" default="null" />
+			<param index="3" name="data" type="Variant" default="null" />
+			<description>
+				Record structured events for debugging and tests.
+			</description>
+		</method>
+		<method name="has_actor_at">
+			<return type="bool" />
+			<param index="0" name="pos" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="get_actor_at">
+			<return type="Variant" />
+			<param index="0" name="pos" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="generate_world">
+			<return type="Color[]" />
+			<param index="0" name="width" type="int" />
+			<param index="1" name="height" type="int" />
+			<param index="2" name="seed" type="int" default="0" />
+			<description>
+				Generate a procedural world map using noise-based biomes and replace the current `map` with the result. Colors are returned for visualization.
+			</description>
+		</method>
+		<method name="can_move">
+			<return type="bool" />
+			<param index="0" name="actor" type="Object" />
+			<param index="1" name="to" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="threatened_tiles">
+			<return type="Vector2i[]" />
+			<param index="0" name="actor" type="Object" />
+			<description>
+			</description>
+		</method>
+		<method name="run_tests">
+			<return type="Dictionary" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="map" type="Grid" setter="" getter="" default="new()">
+		</member>
+		<member name="event_log" type="Array" setter="" getter="" default="[]">
+		</member>
+	</members>
+	<constants>
+		<constant name="Grid" value="&lt;Object&gt;">
+		</constant>
+		<constant name="BaseActor" value="&lt;Object&gt;">
+		</constant>
+		<constant name="ProceduralWorld" value="&lt;Object&gt;">
+		</constant>
+		<constant name="Logging" value="&lt;Object&gt;">
+		</constant>
+	</constants>
+</class>

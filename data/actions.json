@@ -1,0 +1,16 @@
+{
+  "strike": {
+    "act_cost": 1,
+    "chi_cost": 0,
+    "cooldown": 1,
+    "effects": ["damage"],
+    "follow_up": ["combo_finish"]
+  },
+  "combo_finish": {
+    "act_cost": 1,
+    "chi_cost": 1,
+    "cooldown": 2,
+    "effects": ["damage", "stun"],
+    "follow_up": []
+  }
+}
