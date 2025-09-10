@@ -1,0 +1,104 @@
+<h1>Game Logic Overview</h1>
+<p>This project organizes tactical role-playing game logic into discrete Godot modules. Each module owns a narrow slice of the ruleset and communicates with others through simple method calls or Godot signals. This section gives outside engineers a high-level map for navigating the runtime, explaining how these tools work together and why.</p>
+<h2>Core Concepts: The Building Blocks of Golom</h2>
+<p>Golom's game logic is built upon several interconnected modules, each specializing in a core aspect of the game. Understanding these modules and their APIs is key to building and extending the game.</p>
+<ul>
+<li>
+<p><strong><code>LogicGridMap</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module (<code>grid_map.gd</code>) is the pure data container for all spatial information in the game world. It handles grid coordinates, terrain tags, and the physical presence of actors. It's the foundation for anything that needs to know about "where" things are.</li>
+<li><strong>Key API Role:</strong> Provides methods for spatial queries (e.g., <code>is_in_bounds()</code>, <code>is_occupied()</code>), pathfinding (<code>find_path()</code>), and line of sight (<code>has_line_of_sight()</code>). It doesn't handle visual rendering directly but provides the data for it.</li>
+<li><strong>Why it's separate:</strong> By separating spatial data from visual representation, the game can run headless (without graphics) for testing or server-side logic, and allows for flexible visual layers.</li>
+<li><strong>Further Reading:</strong> <a href="html/GridLogic.html">LogicGridMap API Documentation</a>, <a href="grid_map_manual.md">Grid Map Manual</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>TurnBasedGridTimespace</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module (<code>turn_timespace.gd</code>) acts as the central state machine for turn-based combat. It orchestrates the flow of rounds and turns, manages action points (AP), and handles the initiative order of all actors.</li>
+<li><strong>Key API Role:</strong> Methods like <code>start_round()</code> and <code>end_turn()</code> drive the game's temporal progression. It manages actor AP and triggers status effect processing. It also emits crucial signals like <code>round_started</code>, <code>turn_started</code>, and <code>ap_changed</code> to notify other systems of game state changes.</li>
+<li><strong>Why it's central:</strong> By centralizing turn management, the game ensures consistent application of rules and provides clear points for other modules (like UI or AI) to synchronize with the game's flow.</li>
+<li><strong>Further Reading:</strong> <a href="html/TurnBasedGridTimespace.html">TurnBasedGridTimespace API Documentation</a>, <a href="turn_timespace_manual.md">Turn Timespace Manual</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>Attributes</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module (<code>attributes.gd</code>) is the central authority for all numeric statistics (attributes) of actors. It handles base values, applies various types of modifiers (additive, multiplicative, percentage), and enforces clamped ranges.</li>
+<li><strong>Key API Role:</strong> The <code>get_value(actor, key)</code> method is paramount; <strong>all systems must query attribute values through this method</strong> to ensure modifiers and ranges are correctly applied. Methods like <code>set_base()</code> and <code>add_modifier()</code> allow for dynamic changes to attributes.</li>
+<li><strong>Why it's centralized:</strong> Funneling all attribute reads and modifications through this single service ensures consistency, prevents bugs from direct field manipulation, and makes auditing attribute calculations much easier.</li>
+<li><strong>Further Reading:</strong> <a href="html/Attributes.html">Attributes API Documentation</a>, <a href="attributes_manual.md">Attributes Manual</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>Statuses</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module (<code>statuses.gd</code>) manages temporary or persistent status effects (buffs and debuffs) applied to actors or even specific tiles.</li>
+<li><strong>Key API Role:</strong> <code>apply_status()</code> adds effects, and <code>tick()</code> (called by <code>TurnBasedGridTimespace</code>) reduces durations and purges expired statuses. Signals like <code>status_applied</code> and <code>status_removed</code> inform other modules of changes.</li>
+<li><strong>Why it's separate:</strong> Isolating status effect logic simplifies their management, allowing for complex interactions without cluttering actor definitions. It also ensures consistent application and removal of effects.</li>
+<li><strong>Further Reading:</strong> <a href="html/Statuses.html">Statuses API Documentation</a>, <a href="statuses_manual.md">Statuses Manual</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>Abilities</code> &amp; <code>Loadouts</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong><ul>
+<li><strong><code>Abilities</code></strong> (<code>abilities.gd</code>): Defines, validates, and executes active abilities. It handles resource costs, cooldowns, and the core logic of what an ability does.</li>
+<li><strong><code>Loadouts</code></strong> (<code>loadouts.gd</code>): Determines which abilities an actor currently has access to, based on factors like equipment, class, or active status effects.</li>
+</ul>
+</li>
+<li><strong>Key API Role:</strong> <code>Abilities.can_use()</code> checks if an actor meets the requirements (e.g., AP, cooldowns via <code>Attributes</code>). <code>Abilities.execute()</code> performs the ability. <code>Loadouts.get_available()</code> provides the list of usable abilities to UI or AI.</li>
+<li><strong>Why they work together:</strong> <code>Loadouts</code> acts as a filter or grant system for <code>Abilities</code>. This separation allows designers to easily define new abilities and then control their availability to different actors without modifying core ability logic.</li>
+<li><strong>Further Reading:</strong> <a href="html/Abilities.html">Abilities API Documentation</a>, <a href="html/Loadouts.html">Loadouts API Documentation</a>, <a href="abilities_manual.md">Abilities Manual</a>, <a href="loadouts_manual.md">Loadouts Manual</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>Reactions</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module (<code>reactions.gd</code>) provides a lightweight interrupt system for "opportunity actions" or reactions that occur in response to specific game events (e.g., an attack of opportunity when an enemy moves into range).</li>
+<li><strong>Key API Role:</strong> <code>trigger()</code> queues a reaction, and <code>resolve_next()</code> processes the next one.</li>
+<li><strong>Why it's separate:</strong> It allows for complex reactive behaviors without tightly coupling them into the main turn sequence, making the game logic more flexible and extensible.</li>
+<li><strong>Further Reading:</strong> <a href="html/Reactions.html">Reactions API Documentation</a>, <a href="reactions_manual.md">Reactions Manual</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>EventBus</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module (<code>event_bus.gd</code>) is an append-only log that captures every significant state change or event in the game.</li>
+<li><strong>Key API Role:</strong> <code>push(evt)</code> is used by all other modules to record structured event dictionaries. <code>serialize()</code> and <code>replay()</code> enable saving, loading, and replaying game sessions deterministically.</li>
+<li><strong>Why it's crucial:</strong> It's fundamental for debugging (seeing the exact sequence of events), analytics (collecting data on gameplay), and enabling deterministic replays (recreating a game session exactly as it happened).</li>
+<li><strong>Further Reading:</strong> <a href="html/EventBus.html">EventBus API Documentation</a>, <a href="event_bus_manual.md">Event Bus Manual</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>GridVisualLogic</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module (<code>grid_visual_logic.gd</code>) is an immediate-mode renderer primarily used for debugging grid state or powering a minimal UI. It allows developers to draw colors or custom shapes directly onto grid cells.</li>
+<li><strong>Key API Role:</strong> <code>set_cell_state()</code> and <code>update_cells()</code> allow for dynamic visual feedback on the grid.</li>
+<li><strong>Why it's separate:</strong> It provides a quick and easy way to visualize the underlying <code>LogicGridMap</code> data without needing complex 3D models or extensive UI setup, making debugging much faster.</li>
+<li><strong>Further Reading:</strong> <a href="html/GridVisualLogic.html">GridVisualLogic API Documentation</a>, <a href="grid_visual_logic.md">Grid Visual Logic Manual</a></li>
+</ul>
+</li>
+</ul>
+<p>Modules are intentionally decoupled so they can be instantiated or swapped independently inside tests or gameplay scenes. The <code>scripts/test_runner.gd</code> scene shows how to run their self-tests headlessly.</p>
+<h2>Execution Flow: A Turn in Action</h2>
+<p>Understanding how these modules interact during a typical game turn is essential. The <code>TurnBasedGridTimespace</code> module acts as the central coordinator.</p>
+<ol>
+<li><strong>Round Start:</strong> <code>TurnBasedGridTimespace.start_round()</code> is called. This resets each actor's action points and emits the <code>round_started</code> signal. It also triggers <code>Statuses.tick()</code> to process any round-start effects.</li>
+<li><strong>Turn Begins:</strong> <code>TurnBasedGridTimespace</code> initiates an actor's turn, emitting the <code>turn_started</code> signal and applying any <code>turn_start</code> statuses via the <code>Statuses</code> module.</li>
+<li><strong>Ability Selection:</strong> External logic (e.g., player UI) queries <code>Loadouts.get_available()</code> to see what abilities an actor has. For each ability, <code>Abilities.can_use()</code> is called, which consults <code>Attributes.get_value()</code> to check for sufficient resources and cooldowns.</li>
+<li><strong>Action Execution:</strong> When an action is performed (e.g., movement, ability use), <code>TurnBasedGridTimespace</code> handles AP expenditure. Movement actions delegate to <code>LogicGridMap.move_actor()</code> for spatial updates. Successful actions emit <code>action_performed</code> and <code>ap_changed</code> signals. If an ability is used, <code>Abilities.execute()</code> is called.</li>
+<li><strong>Reactions:</strong> After certain actions (like movement), <code>TurnBasedGridTimespace</code> might check for reactions (e.g., using <code>LogicGridMap.has_line_of_sight()</code>). If a reaction is triggered, the <code>Reactions</code> module is notified to queue and resolve it.</li>
+<li><strong>Status Handling:</strong> Throughout the turn, abilities or other game effects can call <code>TurnBasedGridTimespace.apply_status_to_actor()</code>, which interacts with the <code>Statuses</code> module. <code>Statuses</code> emits <code>status_applied</code> and <code>status_removed</code> signals as effects begin or end.</li>
+<li><strong>Event Logging:</strong> Crucially, at each significant step, modules push structured event dictionaries to the <code>EventBus</code> using its <code>push()</code> method. This creates a complete, chronological record of the game state.</li>
+<li><strong>Turn End:</strong> <code>TurnBasedGridTimespace.end_turn()</code> is called, emitting <code>turn_ended</code>, processing <code>turn_end</code> statuses, and advancing to the next actor or ending the round.</li>
+</ol>
+<p>This coordinated dance of method calls and signals ensures that all game logic is processed consistently and that other systems can react appropriately.</p>
+<h2>Integration Tips for Developers</h2>
+<ul>
+<li><strong>Treat Modules as Services:</strong> Think of each module (e.g., <code>Attributes</code>, <code>Statuses</code>) as a self-contained service. Instantiate the ones you need and inject them into your game scenes or other modules. This promotes modularity and reusability.</li>
+<li><strong>Leverage Signals for Loose Coupling:</strong> Use Godot's signals (<code>turn_started</code>, <code>ap_changed</code>, <code>status_applied</code>, etc.) extensively. This is the primary mechanism for modules to communicate without directly knowing about each other's internal implementations. This keeps UI and AI layers loosely coupled from the core game logic.</li>
+<li><strong>Run Module Self-Tests Frequently:</strong> The <code>scripts/test_runner.gd</code> script is your best friend. Run it often with <code>godot4 --headless --path . --script scripts/test_runner.gd</code> to ensure deterministic behavior across platforms and to catch regressions early. Each module's <code>run_tests()</code> method provides a quick way to verify its functionality.</li>
+<li><strong>Minimal Public APIs, Data-Driven Rules:</strong> When extending modules or adding new features, strive to keep public APIs minimal and well-defined. Prefer using data-driven dictionaries for new rules (e.g., ability definitions, status effects) rather than hardcoding them into scripts. This allows designers to iterate on gameplay without requiring code changes.</li>
+<li><strong>Consult Specific Manuals:</strong> This overview provides a map. For in-depth API usage, examples, and specific implementation details for each module, refer to its dedicated manual in the <code>docs/</code> folder and its corresponding HTML API documentation in <code>docs/html/</code>.</li>
+</ul>

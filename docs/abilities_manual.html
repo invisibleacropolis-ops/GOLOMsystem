@@ -1,0 +1,99 @@
+<h1>Abilities Module Manual</h1>
+<p><code>abilities.gd</code> validates and executes active abilities loaded from data files. Definitions include resource costs, cooldowns, and optional follow-up chains to support combo systems.</p>
+<h2>Responsibilities</h2>
+<ul>
+<li>Register ability definitions in the <code>catalog</code> dictionary or load them from JSON.</li>
+<li>Verify that an actor can use an ability through <code>can_use()</code> which checks cooldowns and resource costs (<code>ACT</code>, <code>CHI</code>).</li>
+<li>Execute ability logic, deduct resources, track cooldowns, and push structured entries into the <code>event_log</code>.</li>
+</ul>
+<h2>Core Concepts and API Details</h2>
+<p>The <code>Abilities</code> module manages the lifecycle of in-game abilities. It provides a centralized system for defining, validating, and executing actions that characters can perform.</p>
+<h3>Class: <code>Abilities</code> (inherits from <code>Node</code>)</h3>
+<p>This is the main class for managing abilities. It's a <code>Node</code>, meaning it can be added to your game scene tree and benefit from Godot's node features.</p>
+<h4>Members</h4>
+<ul>
+<li><strong><code>catalog</code></strong> (<code>Dictionary</code>, Default: <code>{}</code>): This dictionary stores all registered ability definitions. When you <code>register_ability</code> or <code>load_from_file</code>, the ability data is added here, keyed by a unique ability ID. This acts as the central repository for all ability blueprints.</li>
+<li><strong><code>cooldowns</code></strong> (<code>Dictionary</code>, Default: <code>{}</code>): This dictionary tracks the current cooldown status for active abilities. When an ability is used, its cooldown is set here, and <code>tick_cooldowns()</code> reduces these counters over time.</li>
+<li><strong><code>event_log</code></strong> (<code>Array</code>, Default: <code>[]</code>): An array that records significant events related to abilities, such as an ability being used or damage being applied. This log is crucial for debugging, analytics, and potentially for replaying game states.</li>
+</ul>
+<h4>Methods</h4>
+<ul>
+<li><strong><code>log_event(t: String, actor: Object = null, pos: Variant = null, data: Variant = null) -&gt; void</code></strong>
+    Records a structured event into the <code>event_log</code>. This is a general-purpose logging method used internally by the module to track ability-related occurrences.</li>
+<li><strong><code>register_ability(id: String, data: Dictionary) -&gt; void</code></strong>
+    Adds a new ability definition to the <code>catalog</code>.<ul>
+<li><code>id</code>: A unique string identifier for the ability (e.g., "fireball", "heal").</li>
+<li><code>data</code>: A dictionary containing all the properties of the ability, such as its cost, cooldown, effects, and any follow-up abilities.</li>
+</ul>
+</li>
+<li><strong><code>load_from_file(path: String) -&gt; void</code></strong>
+    Loads multiple ability definitions from a JSON file located at <code>path</code>. This is the primary way to populate the <code>catalog</code> with abilities defined by game designers.</li>
+<li><strong><code>tick_cooldowns() -&gt; void</code></strong>
+    Decrements all active cooldown counters by one. This method should be called once per game round or turn to advance the cooldowns of all abilities.</li>
+<li><strong><code>can_use(actor: Object, id: String, attrs: Variant = null) -&gt; bool</code></strong>
+    Checks if a given <code>actor</code> can currently use the ability identified by <code>id</code>. This method validates against cooldowns and resource costs (e.g., Action Points, Chi, etc., often managed by an <code>Attributes</code> module).<ul>
+<li><code>actor</code>: The game object attempting to use the ability.</li>
+<li><code>id</code>: The ID of the ability to check.</li>
+<li><code>attrs</code>: Optional additional attributes or context for the check.</li>
+<li><strong>Returns:</strong> <code>true</code> if the actor can use the ability, <code>false</code> otherwise.</li>
+</ul>
+</li>
+<li><strong><code>execute(actor: Object, id: String, target: Variant, attrs: Variant = null) -&gt; Array</code></strong>
+    Executes the logic for the ability identified by <code>id</code> for the given <code>actor</code> on a <code>target</code>. This method handles deducting costs, setting cooldowns, logging the usage, and returning any follow-up ability IDs (for combo systems).<ul>
+<li><code>actor</code>: The game object performing the ability.</li>
+<li><code>id</code>: The ID of the ability to execute.</li>
+<li><code>target</code>: The target of the ability (can be a position, another actor, etc.).</li>
+<li><code>attrs</code>: Optional additional attributes or context for execution.</li>
+<li><strong>Returns:</strong> An <code>Array</code> of follow-up ability IDs, if any.</li>
+</ul>
+</li>
+<li><strong><code>run_tests() -&gt; Dictionary</code></strong>
+    Executes internal self-tests for the <code>Abilities</code> module, returning a dictionary of test results. Useful for continuous integration and development.</li>
+</ul>
+<h4>Signals</h4>
+<ul>
+<li><strong><code>damage_applied(attacker: Variant, defender: Variant, amount: Variant)</code></strong>
+    This signal is emitted whenever an ability successfully reduces a target's HP. External systems (like UI for damage numbers, or other game logic) can connect to this signal to react to damage events.<ul>
+<li><code>attacker</code>: The object that dealt the damage.</li>
+<li><code>defender</code>: The object that received the damage.</li>
+<li><code>amount</code>: The amount of HP removed.</li>
+</ul>
+</li>
+</ul>
+<h3>Class: <code>Abilities.DummyActor</code> (inherits from <code>RefCounted</code>)</h3>
+<p>This is a simple helper class, likely used for testing or as a basic placeholder for game entities that interact with the <code>Abilities</code> system. Being <code>RefCounted</code> means it's memory-managed by Godot and doesn't need to be part of the scene tree.</p>
+<h4>Members</h4>
+<ul>
+<li><strong><code>HLTH</code></strong> (<code>int</code>, Default: <code>0</code>): Represents the health of this dummy actor. This suggests that the <code>Abilities</code> module (or related systems like <code>Attributes</code>) might interact with an <code>HLTH</code> property on actors to manage health-related effects.</li>
+</ul>
+<h2>Example</h2>
+<pre><code class="language-gdscript">var abilities := Abilities.new()
+abilities.load_from_file(&quot;res://data/actions.json&quot;)
+
+# Assuming 'player_actor' is an Object with relevant properties (like health, resources)
+# and 'enemy_target' is another Object.
+# 'attrs' could be a dictionary of additional context, e.g., {&quot;critical_hit&quot;: true}
+var follow_up_abilities = abilities.execute(player_actor, &quot;strike&quot;, enemy_target, {&quot;damage_multiplier&quot;: 1.5})
+
+if follow_up_abilities.size() &gt; 0:
+    print(&quot;Player performed a combo! Follow-up abilities: &quot; + str(follow_up_abilities))
+
+# Advance cooldowns each round
+abilities.tick_cooldowns()
+</code></pre>
+<h2>Integration Notes</h2>
+<ul>
+<li><strong>External Systems Interaction:</strong> Systems like <code>Loadouts</code> (which manage what abilities an actor has equipped) or UI hotbars should call <code>can_use()</code> before enabling an ability button or option. This ensures that players only see actionable abilities.</li>
+<li><strong>Data-Driven Design:</strong> Ability data is externalized to <code>data/actions.json</code> and similar files. This is a crucial design choice that allows game designers to tweak ability costs, effects, and other parameters without requiring code changes or recompilation. This speeds up iteration and balancing.</li>
+<li><strong>Event Logging for Analysis:</strong> The <code>event_log</code> array is a powerful feature. Each entry is a structured dictionary (e.g., <code>{"t": "ability", "actor": actor, "id": id, "target": target}</code>). This log can be used for:<ul>
+<li><strong>Debugging:</strong> Understanding the sequence of events that led to a particular game state.</li>
+<li><strong>Analytics:</strong> Collecting data on ability usage, effectiveness, and player behavior.</li>
+<li><strong>Deterministic Replay:</strong> Potentially replaying game sessions by re-executing events from the log, which is valuable for testing and competitive play analysis.</li>
+</ul>
+</li>
+</ul>
+<h2>Testing</h2>
+<p>Invoke the module's self-test through the shared runner:</p>
+<pre><code class="language-bash">godot4 --headless --path . --script scripts/test_runner.gd -- --module=abilities
+</code></pre>
+<p>The test loads actions from JSON and verifies cost spending, cooldown ticking, and follow-up chains, ensuring the core mechanics of the <code>Abilities</code> module function as expected.</p>

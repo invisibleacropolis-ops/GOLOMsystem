@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GridVisualLogic API Documentation</title>
+</head>
+<body>
+<h1>Class: GridVisualLogic (inherits from Node2D)</h1>
+
+<h2>Brief Description</h2>
+<p></p>
+
+<h2>Description</h2>
+<p></p>
+
+<h2>Methods</h2>
+<ul>
+<li><h3>set_grid_map</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Assigns a LogicGridMap and adopts its dimensions.</p>
+</li>
+<li><h3>set_grid_size</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Manually sets the grid dimensions.</p>
+</li>
+<li><h3>set_cell_state</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Records a Color or Callable to draw on the specified cell.</p>
+</li>
+<li><h3>clear_cell_state</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Clears any custom state for the specified cell.</p>
+</li>
+<li><h3>update_cells</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Replace the entire cell state dictionary with `states` and redraw. `states` should map `Vector2i` positions to either a `Color` or a `Callable` used by `_draw()`.</p>
+</li>
+<li><h3>log_event</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Append a structured event to the module's event log.</p>
+</li>
+<li><h3>_draw</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Immediate-mode drawing callback.</p>
+</li>
+<li><h3>run_tests</h3>
+<p><strong>Returns:</strong> Dictionary</p>
+<p>Minimal self-test ensuring basic state management works.</p>
+</li>
+</ul>
+
+<h2>Members</h2>
+<ul>
+<li><h3>cell_size</h3>
+<p><strong>Type:</strong> int (Default: 32)</p>
+</li>
+<li><h3>grid_size</h3>
+<p><strong>Type:</strong> Vector2i (Default: Vector2i(8, 8))</p>
+</li>
+<li><h3>grid_map</h3>
+<p><strong>Type:</strong> LogicGridMap (Default: null)</p>
+</li>
+<li><h3>cell_states</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>event_log</h3>
+<p><strong>Type:</strong> Array (Default: [])</p>
+</li>
+</ul>
+
+<h2>Signals</h2>
+<ul>
+</ul>
+
+<h2>Constants</h2>
+<ul>
+<li><h3>LogicGridMap</h3>
+<p><strong>Value:</strong> <code>&lt;Object&gt;</code></p>
+</li>
+<li><h3>Logging</h3>
+<p><strong>Value:</strong> <code>&lt;Object&gt;</code></p>
+</li>
+</ul>
+</body>
+</html>

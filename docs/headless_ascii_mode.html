@@ -1,0 +1,62 @@
+<h1>Headless ASCII Mode</h1>
+<p>The Golom project can be executed without a graphical window using its built-in ASCII renderer. This mode mirrors the normal GUI behavior by running all runtime services and actors while rendering the game world to your terminal. This is incredibly useful for automated testing, continuous integration (CI), or simply running the game on a server without a display.</p>
+<h2>Running the Game in Headless ASCII Mode</h2>
+<p>To start the game in headless ASCII mode, use the following command:</p>
+<pre><code class="language-bash">godot4 --headless --path .
+</code></pre>
+<p>Upon execution, module tests will run first. If all tests are successful, the ASCII grid will begin updating directly in your terminal. The renderer prints the grid every half second by default, including actor positions (represented by <code>@</code> or custom symbols). Other AI-driven actors will continue to move during their turns, matching the behavior observed in the graphical user interface (GUI) version.</p>
+<h2>How ASCII Rendering Works (Behind the Scenes)</h2>
+<p>The headless ASCII mode is powered by the <code>GridRealtimeRenderer</code> module. This module, typically used for high-performance visual overlays in the GUI, also has robust capabilities for generating text-based representations of the grid.</p>
+<h3>Class: <code>GridRealtimeRenderer</code> (inherits from <code>Node2D</code>)</h3>
+<p>The <code>GridRealtimeRenderer</code> is responsible for converting the game's grid state into a human-readable ASCII format.</p>
+<h4>Key Members for ASCII Output</h4>
+<ul>
+<li><strong><code>ascii_update_sec</code></strong> (<code>float</code>, Default: <code>0.5</code>): This member controls the update frequency of the ASCII output. A value of <code>0.5</code> means the grid will refresh every half second. You can adjust this value in the <code>GridRealtimeRenderer</code> instance if you need faster or slower updates.</li>
+<li><strong><code>ascii_debug</code></strong> (<code>String</code>): This read-only member holds the most recently generated ASCII string representation of the grid. The engine automatically prints this string to the console at the interval defined by <code>ascii_update_sec</code>.</li>
+<li><strong><code>ascii_use_color</code></strong> (<code>bool</code>, Default: <code>false</code>): If set to <code>true</code>, the ASCII output will include ANSI color codes. This allows terminals that support ANSI escape sequences to display the map with colored glyphs, making it easier to distinguish different elements (e.g., red for enemies, blue for allies).</li>
+<li><strong><code>ascii_actor_group</code></strong> (<code>StringName</code>, Default: <code>&amp;"actors"</code>): The <code>GridRealtimeRenderer</code> automatically scans nodes belonging to this group to include their ASCII representations in the output. Ensure your actors are added to this group (e.g., <code>actor.add_to_group("actors")</code>).</li>
+<li><strong><code>ascii_include_actors</code></strong> (<code>bool</code>, Default: <code>true</code>): If <code>true</code>, actors found in the <code>ascii_actor_group</code> will have their symbols rendered on the ASCII grid.</li>
+</ul>
+<h4>Key Methods for ASCII Output and Interaction</h4>
+<ul>
+<li><strong><code>generate_ascii_field() -&gt; String</code></strong>: This method can be called directly to obtain the current ASCII snapshot of the grid on demand. This is particularly useful for scripting tests where you need to capture the grid state at a precise moment.</li>
+<li><strong><code>set_ascii_entity(p: Vector2i, symbol: String, color: Color, priority: int, id: int, z_index: int) -&gt; void</code></strong>: Allows you to manually place custom ASCII symbols on the grid. This is useful for debugging specific points or marking temporary locations.</li>
+<li><strong><code>update_input(pos: Vector2i, action: String) -&gt; void</code></strong>: This method is crucial for simulating user interactions in headless mode. The game's input handling system (likely in <code>Root.gd</code> or a similar top-level script) translates keyboard commands (<code>w</code>, <code>a</code>, <code>s</code>, <code>d</code>) into calls to this method.<ul>
+<li><code>pos</code>: The <code>Vector2i</code> grid coordinates relevant to the action.</li>
+<li><code>action</code>: A <code>String</code> representing the type of interaction (e.g., <code>"select"</code>, <code>"move"</code>, <code>"target"</code>, <code>"click"</code>, <code>"drag_start"</code>, <code>"drag"</code>, <code>"drag_end"</code>, <code>"clear"</code>).</li>
+</ul>
+</li>
+</ul>
+<h3>Customizing Actor Representation</h3>
+<p>Actors can customize how they appear in the ASCII output. If your actor scripts inherit from <code>BaseActor</code> or a similar class, you can override these methods:</p>
+<ul>
+<li><strong><code>get_ascii_symbol() -&gt; String</code></strong>: Returns the character to represent the actor (e.g., <code>"@"</code>, <code>"E"</code>, <code>"P"</code>).</li>
+<li><strong><code>get_ascii_color() -&gt; Color</code></strong>: Returns the color for the actor's symbol (used if <code>ascii_use_color</code> is <code>true</code>).</li>
+<li><strong><code>get_ascii_priority() -&gt; int</code></strong>: Determines which symbol appears if multiple entities occupy the same cell (higher priority wins).</li>
+<li><strong><code>get_ascii_z_index() -&gt; int</code></strong>: Further refines layering for entities with the same priority.</li>
+</ul>
+<h2>Interacting with the Game</h2>
+<p>When running in headless ASCII mode, you can interact with the game using simple keyboard commands:</p>
+<ul>
+<li><strong><code>w</code>, <code>a</code>, <code>s</code>, <code>d</code></strong>: These keys are typically mapped to movement actions for the player actor when it is their turn. The game's input system translates these into <code>update_input()</code> calls on the <code>GridRealtimeRenderer</code> (and subsequently, actions within <code>TurnBasedGridTimespace</code>).</li>
+<li><strong><code>quit</code></strong>: Type <code>quit</code> and press Enter in the terminal to gracefully exit the simulation.</li>
+</ul>
+<h2>Example ASCII Output</h2>
+<pre><code>+---+---+---+---+---+
+| . | . | . | . | . |
++---+---+---+---+---+
+| . | @ | . | . | . |
++---+---+---+---+---+
+| . | . | . | E | . |
++---+---+---+---+---+
+| . | . | . | . | . |
++---+---+---+---+---+
+</code></pre>
+<p>(Where <code>@</code> might be the player and <code>E</code> an enemy, depending on their <code>get_ascii_symbol()</code> implementation.)</p>
+<h2>Testing in Headless Mode</h2>
+<p>The headless ASCII mode is invaluable for automated testing. You can write scripts that:
+1.  Start the game in headless mode.
+2.  Simulate input using <code>GridRealtimeRenderer.update_input()</code>.
+3.  Capture the <code>GridRealtimeRenderer.generate_ascii_field()</code> output to assert the game state.
+4.  Check the <code>EventBus</code> log for expected events.</p>
+<p>This allows for rapid, deterministic testing of game logic without the overhead of rendering a full graphical interface.</p>

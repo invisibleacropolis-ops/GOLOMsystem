@@ -1,0 +1,31 @@
+[gd_scene load_steps=2 format=3 uid="uid://dso8n5u1rklxn"]
+
+[ext_resource type="Script" path="res://scripts/core/workspace.gd" id="1_zap0v"]
+
+[node name="Workspace" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_zap0v")
+
+[node name="TopBar" type="HBoxContainer" parent="."]
+
+[node name="RunTests" type="Button" parent="TopBar"]
+text = "Run Tests"
+
+[node name="RunSelected" type="Button" parent="TopBar"]
+text = "Run Selected"
+
+[node name="ModuleField" type="LineEdit" parent="TopBar"]
+placeholder_text = "module1,module2"
+
+[node name="LoopTests" type="CheckButton" parent="TopBar"]
+text = "Loop"
+
+[node name="Interval" type="SpinBox" parent="TopBar"]
+min_value = 0.5
+step = 0.5
+value = 2.0
+
+[node name="ModuleList" type="VBoxContainer" parent="."]
+size_flags_vertical = 3

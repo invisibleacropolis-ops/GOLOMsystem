@@ -1,0 +1,98 @@
+[gd_scene load_steps=11 format=3 uid="uid://bbfb5mia3p4xm"]
+
+[ext_resource type="Script" uid="uid://bn0i15dnqnd66" path="res://scripts/game/battle_controller.gd" id="1"]
+[ext_resource type="Script" uid="uid://m2j4to6lsttp" path="res://scripts/modules/runtime_services.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/modules/GridRealtimeRenderer.tscn" id="3"]
+[ext_resource type="Script" uid="uid://cdwqwa1jd5u1e" path="res://scripts/grid/grid_interactor.gd" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/AbilityHotbar.tscn" id="6"]
+[ext_resource type="Script" uid="uid://cc2euntybi88k" path="res://scripts/ui/slice_debug.gd" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/MainGUI.tscn" id="8"]
+[ext_resource type="Script" uid="uid://bnla8nmmo2iuu" path="res://scripts/integration/isometric_camera.gd" id="9"]
+[ext_resource type="Script" uid="uid://blj08ywngv3go" path="res://scripts/ui/error_overlay.gd" id="10"]
+[ext_resource type="Script" uid="uid://0vln7eqk3brf" path="res://scripts/tools/test_harness_node.gd" id="11"]
+
+[node name="VerticalSlice" type="Node2D"]
+
+[node name="World3D" type="Node3D" parent="."]
+
+[node name="Gridmaps" type="Node3D" parent="World3D"]
+
+[node name="Actors" type="Node3D" parent="World3D"]
+
+[node name="Sun" type="DirectionalLight3D" parent="World3D"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 8, 8)
+light_energy = 2.0
+
+[node name="Camera3D" type="Camera3D" parent="World3D"]
+script = ExtResource("9")
+grid_root_path = NodePath("../Gridmaps")
+overlay_control_path = NodePath("../MainGUI/Root/LeftPane/WorldOverlay")
+debug_logging = true
+
+[node name="Runtime" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="GridRealtimeRenderer" parent="." instance=ExtResource("3")]
+visible = false
+
+[node name="GridInteractor" type="Node2D" parent="."]
+script = ExtResource("4")
+
+[node name="BattleController" type="Node" parent="."]
+script = ExtResource("1")
+services_path = NodePath("../Runtime")
+renderer_path = NodePath("../GridRealtimeRenderer")
+interactor_path = NodePath("../GridInteractor")
+hotbar_path = NodePath("../AbilityHotbar/AbilityHotbar")
+grid_3d_root_path = NodePath("../World3D/Gridmaps")
+
+[node name="AbilityHotbar" parent="." instance=ExtResource("6")]
+services_path = NodePath("../Runtime")
+visible = false
+
+[node name="MainGUI" parent="." instance=ExtResource("8")]
+services_path = NodePath("../Runtime")
+controller_path = NodePath("../BattleController")
+
+[node name="SliceDebug" type="CanvasLayer" parent="."]
+script = ExtResource("7")
+renderer_path = NodePath("../GridRealtimeRenderer")
+visible = false
+
+[node name="Panel" type="Panel" parent="SliceDebug"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 260.0
+offset_bottom = 120.0
+
+[node name="VBox" type="VBoxContainer" parent="SliceDebug/Panel"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="AsciiStreamToOutput" type="CheckBox" parent="SliceDebug/Panel/VBox"]
+layout_mode = 2
+text = "ASCII → Output panel"
+
+[node name="TcpStreamEnabled" type="CheckBox" parent="SliceDebug/Panel/VBox"]
+layout_mode = 2
+text = "TCP ASCII stream enabled"
+
+[node name="PortLabel" type="Label" parent="SliceDebug/Panel/VBox"]
+layout_mode = 2
+text = "ASCII TCP: 127.0.0.1:3456"
+
+[node name="ShowOverlay" type="CheckBox" parent="SliceDebug/Panel/VBox"]
+layout_mode = 2
+text = "Show 2D Grid Overlay"
+
+[node name="ErrorOverlay" type="CanvasLayer" parent="."]
+script = ExtResource("10")
+visible = false
+
+[node name="InGameTests" type="Node" parent="."]
+script = ExtResource("11")

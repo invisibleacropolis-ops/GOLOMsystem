@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="MapGenerator" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="build">
+			<return type="Dictionary" />
+			<param index="0" name="params" type="Dictionary" />
+			<description>
+				High level map generator tying procedural map data to the Tile to Gridmap addon.  The builder produces four pieces: 1. `LogicGridMap` describing terrain tags. 2. A `GridMap` populated via `T2GTerrainLayer.build_gridmap()`. 3. A `GridRealtimeRenderer` ready for debug visualization. 4. A `TileToGridMapBridge` holding the terrain layer for rebuilds.  Params accepts the same fields as `ProceduralMapGenerator.generate()` plus: - `tileset` (TileSet): tiles used by the T2GTerrainLayer. - `terrain_atlas` (Dictionary): maps terrain tags to atlas coordinates. - `mesh_library` (MeshLibrary): optional mesh library for the GridMap. - `tile_size` (int): size in pixels for T2GTerrainLayer tiles.
+			</description>
+		</method>
+		<method name="run_tests">
+			<return type="Dictionary" />
+			<description>
+				Lightweight self-test for CI usage.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="ProceduralMapGenerator" value="&lt;Object&gt;">
+		</constant>
+		<constant name="GridRealtimeRenderer" value="&lt;Object&gt;">
+		</constant>
+		<constant name="T2GTerrainLayer" value="&lt;Object&gt;">
+		</constant>
+		<constant name="TileToGridMapBridge" value="&lt;Object&gt;">
+		</constant>
+	</constants>
+</class>

@@ -1,0 +1,90 @@
+<h1>Reactions Module Manual</h1>
+<p><code>reactions.gd</code> defines the <code>Reactions</code> module, which is designed to queue and manage interrupt abilities such as attacks of opportunity or overwatch shots. This module ensures that reactive actions are handled in a structured and prioritized manner, allowing for complex tactical gameplay.</p>
+<h2>Responsibilities</h2>
+<ul>
+<li>Accumulate reaction triggers via the <code>trigger()</code> method.</li>
+<li>Prioritize queued reactions so that higher-priority entries resolve first.</li>
+<li>Expose <code>resolve_next()</code> to pop the highest-priority reaction from the queue.</li>
+<li>Allow AI planners or other systems to inspect the current queue through <code>get_pending()</code> and the <code>reaction_queued</code> signal.</li>
+<li>Log each reaction trigger in the <code>event_log</code> for later inspection and debugging.</li>
+</ul>
+<h2>Core Concepts and API Details</h2>
+<p>The <code>Reactions</code> module provides a flexible system for handling actions that occur in response to other events, outside of the normal turn order. This is crucial for dynamic and responsive combat systems.</p>
+<h3>Class: <code>Reactions</code> (inherits from <code>Node</code>)</h3>
+<p>As a <code>Node</code>, <code>Reactions</code> can be integrated into your game's scene tree, often as part of a <code>RuntimeServices</code> aggregation.</p>
+<h4>Members</h4>
+<ul>
+<li><strong><code>queued</code></strong> (<code>Array</code>, Default: <code>[]</code>): This array stores all the reaction entries that have been triggered and are awaiting resolution. Entries are typically dictionaries containing information about the reacting actor, the type of reaction, and any relevant data.</li>
+<li><strong><code>event_log</code></strong> (<code>Array</code>, Default: <code>[]</code>): An internal log for recording events related to reactions, useful for debugging.</li>
+</ul>
+<h4>Methods</h4>
+<ul>
+<li><strong><code>log_event(t: String, actor: Object = null, pos: Variant = null, data: Variant = null) -&gt; void</code></strong>
+    Records structured events for debugging and tests. This is a general-purpose logging method used internally.</li>
+<li><strong><code>trigger(actor: Object, data: Variant, priority: int = 0) -&gt; void</code></strong>
+    Queues a new reaction. This method is called by other modules when a condition for a reaction is met.<ul>
+<li><code>actor</code>: The <code>Object</code> representing the actor that is reacting.</li>
+<li><code>data</code>: A <code>Variant</code> (typically a <code>Dictionary</code>) containing details about the reaction (e.g., type of reaction, target, specific ability ID).</li>
+<li><code>priority</code>: An <code>int</code> value that determines the order of resolution. Higher priority reactions are resolved before lower priority ones.</li>
+</ul>
+</li>
+<li><strong><code>resolve_next() -&gt; Variant</code></strong>
+    Pops and returns the highest-priority reaction from the <code>queued</code> array. Once a reaction is resolved, it is removed from the queue.<ul>
+<li><strong>Returns:</strong> A <code>Variant</code> (typically a <code>Dictionary</code>) representing the reaction entry, or <code>null</code> if the queue is empty.</li>
+</ul>
+</li>
+<li><strong><code>get_pending() -&gt; Array</code></strong>
+    Returns a copy of the <code>queued</code> array, allowing other systems to inspect the reactions that are currently awaiting resolution without modifying the queue.<ul>
+<li><strong>Returns:</strong> An <code>Array</code> of <code>Variant</code>s (reaction entries).</li>
+</ul>
+</li>
+<li><strong><code>run_tests() -&gt; Dictionary</code></strong>
+    Executes internal self-tests for the <code>Reactions</code> module, returning a dictionary of test results.</li>
+</ul>
+<h4>Signals</h4>
+<ul>
+<li><strong><code>reaction_queued(reaction: Variant)</code></strong>
+    Emitted whenever a new reaction is added to the <code>queued</code> array via the <code>trigger()</code> method. Other systems (e.g., UI to display a "reaction window" or AI to re-evaluate its plan) can connect to this signal.<ul>
+<li><code>reaction</code>: The <code>Variant</code> (reaction entry) that was just queued.</li>
+</ul>
+</li>
+</ul>
+<h2>Usage</h2>
+<pre><code class="language-gdscript">var reactions := Reactions.new()
+
+# Example: A movement event triggers an overwatch reaction
+var enemy_actor = get_node(&quot;Enemy&quot;) # Assuming an enemy actor
+var hero_actor = get_node(&quot;Player&quot;) # Assuming a player actor
+
+# Trigger an overwatch reaction with a priority of 10
+reactions.trigger(enemy_actor, {&quot;type&quot;: &quot;overwatch&quot;, &quot;target&quot;: hero_actor, &quot;ability_id&quot;: &quot;overwatch_shot&quot;}, 10)
+
+# Trigger another reaction with a lower priority
+reactions.trigger(hero_actor, {&quot;type&quot;: &quot;defensive_stance&quot;}, 5)
+
+# Resolve the next highest-priority reaction
+var next_reaction := reactions.resolve_next()
+if next_reaction:
+    print(&quot;Reacting actor: %s&quot; % next_reaction.actor.name)
+    print(&quot;Reaction data: %s&quot; % next_reaction.data)
+    # Now, you would typically execute the ability associated with this reaction
+    # For example: Abilities.execute(next_reaction.actor, next_reaction.data.ability_id, next_reaction.data.target)
+else:
+    print(&quot;No pending reactions.&quot;)
+
+# Inspect the remaining queue
+var pending_reactions := reactions.get_pending()
+print(&quot;Pending reactions count: &quot; + str(pending_reactions.size()))
+</code></pre>
+<h2>Integration Notes</h2>
+<ul>
+<li><strong>Decoupled Execution:</strong> The <code>Reactions</code> module does not automatically execute abilities. It only queues and resolves the <em>opportunity</em> for a reaction. Once <code>resolve_next()</code> returns an item, your game logic (e.g., within <code>TurnBasedGridTimespace</code> or an AI system) should then call <code>Abilities.execute()</code> (or similar) to perform the actual ability. This separation allows for more complex decision-making (e.g., AI deciding whether to use a reaction).</li>
+<li><strong>Limiting Reactions:</strong> To enforce limits like "once per turn" or "only one reaction per actor," you should store additional metadata within the queued reaction entry (<code>data</code> dictionary) and implement filtering logic when calling <code>trigger()</code>. This ensures that only valid reactions are added to the queue.</li>
+<li><strong>Event-Driven Triggers:</strong> Extend the <code>trigger()</code> method or create wrapper functions that subscribe to signals from other core modules like <code>TurnBasedGridTimespace</code> (for movement, action events) or <code>LogicGridMap</code> (for spatial events like entering a specific area). This allows reactions to be automatically queued based on game events.</li>
+<li><strong>AI Integration:</strong> AI systems can observe the <code>reaction_queued</code> signal or periodically call <code>get_pending()</code> to inspect the reactions awaiting resolution. This allows AI to make informed decisions about whether to use a reaction, potentially considering its own resources or tactical situation, before calling <code>resolve_next()</code>.</li>
+</ul>
+<h2>Testing</h2>
+<p>Run the module's self-test through the standard runner to verify its functionality:</p>
+<pre><code class="language-bash">godot4 --headless --path . --script scripts/test_runner.gd -- --module=reactions
+</code></pre>
+<p>The test typically enqueues two reactions with different priorities and verifies that the higher-priority entry resolves first, confirming the module's prioritization logic.</p>

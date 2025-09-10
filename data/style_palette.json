@@ -1,0 +1,13 @@
+{
+  "faction": {
+    "player": "#66ccff",
+    "enemy": "#ff6666",
+    "npc": "#66ffcc",
+    "default": "#dddddd"
+  },
+  "ability": "#c8a2ff",
+  "item": "#ffbf00",
+  "status": "#ffd166",
+  "section": "#e0e0ff"
+}
+

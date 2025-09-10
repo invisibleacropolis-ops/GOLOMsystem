@@ -1,0 +1,310 @@
+<h1>Developer Codebase Overview</h1>
+<p>This document provides an exhaustive cross-reference of the Golom tactical RPG project for outside engineers. It surveys every script and module, details their responsibilities, and highlights interactions between systems. The goal is to consolidate knowledge currently scattered across scripts and existing manuals, giving contributors a single reference point.</p>
+<h2>Project Layout</h2>
+<p>The project follows a clear directory structure to organize its components:</p>
+<pre><code>res://scripts/
+  core/                # bootstrapping scenes and base actor definition
+  grid/                # grid-specific resources and interaction helpers
+  modules/             # self-contained logic services
+  tests/               # isolated scene tests
+  test_runner.gd       # headless aggregate test harness
+</code></pre>
+<p>Visual assets and scenes live under <code>res://scenes/</code>, while comprehensive documentation, including API details and manuals, resides in <code>docs/</code>.</p>
+<h2>Core Scripts (<code>scripts/core</code>)</h2>
+<p>These scripts handle the fundamental setup and management of the game's core entities and development environment.</p>
+<h3><code>base_actor.gd</code> - <code>BaseActor</code></h3>
+<p>Defines the <strong>BaseActor</strong> class, a lightweight template for any creature or entity placed on the grid. It's designed to be extended by specific actor types (e.g., player, enemy, NPC).</p>
+<ul>
+<li><strong>Key Data:</strong> Stores essential gameplay data such as:<ul>
+<li><code>grid_pos</code>: Current position on the <code>LogicGridMap</code>.</li>
+<li><code>facing</code>: Direction the actor is facing.</li>
+<li><code>size</code>: Physical size on the grid (e.g., 1x1, 2x2).</li>
+<li><code>faction</code>: A string identifying the actor's allegiance (e.g., "player", "enemy", "neutral").</li>
+<li>Gameplay stats: Health (<code>HLTH</code>), Chi (<code>CHI</code>), Action Points (<code>ACT</code>), Initiative (<code>INIT</code>), status flags, and core attributes (power, speed, focus, capacity, perception).</li>
+<li>Harvestable rewards: XP, loot, quest tokens, and script triggers.</li>
+</ul>
+</li>
+<li><strong>Utility:</strong> The <code>describe()</code> helper method outputs a human-readable summary of the actor's state, useful for debugging.</li>
+<li><strong>API Reference:</strong> While <code>BaseActor</code> itself doesn't have a dedicated API HTML document, its properties are heavily utilized by modules like <code>Attributes</code> and <code>TurnBasedGridTimespace</code>.</li>
+</ul>
+<h3><code>workspace.gd</code> - <code>Workspace</code></h3>
+<p>Implements an interactive <strong>Workspace</strong> scene, primarily used for loading modules and running their tests. This is a developer-facing tool to ensure module stability.</p>
+<ul>
+<li><strong>Functionality:</strong><ul>
+<li>Provides a GUI to list each module, its load status, pass/fail test result, and a button to view detailed logs.</li>
+<li>Supports command-line flags (<code>--module</code> / <code>--modules</code>) to restrict which modules load and run tests.</li>
+<li>Emits a <code>tests_completed</code> signal with a summary dictionary, allowing for automated reporting.</li>
+<li>Supports looping test execution for long-running stability checks.</li>
+<li>Includes a dedicated Map Generator tab that runs procedural world creation on a background thread, showing a pulsing progress bar and allowing export of the resulting color map.</li>
+</ul>
+</li>
+<li><strong>API Reference:</strong> This is an internal tool, so it doesn't have a public API document.</li>
+</ul>
+<h3><code>workspace_debugger.gd</code></h3>
+<p>A small utility script that logs workspace events and errors to <code>user://workspace_errors.log</code> for later inspection. Both informational and error messages funnel through its <code>_log()</code> method. This is crucial for diagnosing issues within the development environment.</p>
+<h3><code>grid_default_map.gd</code></h3>
+<p>This script is responsible for setting up a default demo grid for testing and development.</p>
+<ul>
+<li><strong>Functionality:</strong><ul>
+<li>Loads a 32x32 demo grid.</li>
+<li>Instantiates three color-coded actors (green player, red enemy, blue NPC).</li>
+<li>Preloads the <code>RuntimeServices</code> aggregator (see below) and an optional <code>GridRealtimeRenderer</code> for visual debugging when a display is available.</li>
+<li>Actors are positioned using <code>TurnBasedGridTimespace.add_actor()</code> and rendered via <code>GridVisualLogic.set_cell_color()</code>.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> Demonstrates the initial setup and interaction with <code>RuntimeServices</code>, <code>TurnBasedGridTimespace</code>, and <code>GridVisualLogic</code>.</li>
+</ul>
+<h3><code>root.gd</code></h3>
+<p>The primary entry point scene for the game.</p>
+<ul>
+<li><strong>Functionality:</strong><ul>
+<li>Instantiates the <code>Workspace</code> scene.</li>
+<li>Listens for the <code>Workspace</code>'s <code>tests_completed</code> signal.</li>
+<li>If all module tests pass, it proceeds to load <code>GridDefaultMap.tscn</code> to provide an interactive sandbox for gameplay.</li>
+<li>Can enable continuous background testing via <code>workspace.start_loop()</code>.</li>
+</ul>
+</li>
+</ul>
+<h2>Grid Utilities (<code>scripts/grid</code>)</h2>
+<p>These scripts provide the foundational logic for managing the game's grid-based world and interactions within it.</p>
+<h3><code>grid_map.gd</code> – <code>LogicGridMap</code></h3>
+<p>The <code>LogicGridMap</code> is a critical <code>Resource</code> that encapsulates all tactical spatial logic for the game world. It's a data-driven representation of the grid, separate from its visual rendering.</p>
+<ul>
+<li><strong>Key Responsibilities &amp; API Highlights:</strong><ul>
+<li><strong>Actor Placement:</strong> Tracks occupied tiles (<code>occupied</code> member) and actor origins (<code>actor_positions</code> member).<ul>
+<li><code>move_actor(actor: Object, from_pos: Vector2i, to_pos: Vector2i) -&gt; bool</code>: Validates and performs actor movement, handling multi-tile footprints.</li>
+<li><code>remove_actor(actor: Object) -&gt; void</code>: Clears an actor's entries from the map.</li>
+<li><code>get_occupied_tiles() -&gt; Array</code>: Returns all currently occupied tile positions.</li>
+<li><code>get_all_actors() -&gt; Array</code>: Returns all actors currently on the map.</li>
+</ul>
+</li>
+<li><strong>Spatial Queries:</strong><ul>
+<li><code>is_in_bounds(pos: Vector2i) -&gt; bool</code>: Checks if a position is within the grid boundaries.</li>
+<li><code>is_occupied(pos: Vector2i) -&gt; bool</code>: Checks if a tile is occupied by an actor.</li>
+<li>Distance helpers (<code>get_distance</code>, <code>get_chebyshev_distance</code>).</li>
+<li><code>has_line_of_sight(from_pos: Vector2i, to_pos: Vector2i) -&gt; bool</code>: Uses Bresenham's algorithm to check for unobstructed line of sight, considering LOS blockers and cover.</li>
+</ul>
+</li>
+<li><strong>Range Queries:</strong><ul>
+<li><code>get_actors_in_radius(center: Vector2i, radius: int) -&gt; Array</code>: Finds actors within a given radius.</li>
+<li><code>get_positions_in_range(center: Vector2i, radius: int) -&gt; Array</code>: Finds all positions within a given radius.</li>
+</ul>
+</li>
+<li><strong>Pathfinding:</strong><ul>
+<li><code>find_path(start: Vector2i, end: Vector2i, actor: Object = null) -&gt; Array</code>: Implements A* pathfinding, considering movement costs, turning penalties (<code>TURN_COST</code> constant), climb restrictions, and multi-tile actor support.</li>
+<li><code>find_path_for_actor(actor: Object, start: Vector2i, end: Vector2i) -&gt; Array</code>: A wrapper for <code>find_path</code> that uses the actor's size and facing.</li>
+</ul>
+</li>
+<li><strong>Area-of-Effect (AoE) Shapes:</strong> Provides methods for calculating tiles within various AoE shapes (burst, cone, line, wall) via <code>get_aoe_tiles()</code>.</li>
+<li><strong>Tactical Logic:</strong> Supports zone-of-control projection (<code>get_zone_of_control</code>), flanking checks, cover handling, per-tile movement costs, and height levels.</li>
+<li><strong>Event Logging:</strong> <code>log_event()</code> appends non-error messages for debugging.</li>
+</ul>
+</li>
+<li><strong>API Reference:</strong> <a href="html/GridLogic.html">LogicGridMap API Documentation</a> (Note: The API doc is named <code>GridLogic.html</code> but refers to the <code>LogicGridMap</code> class).</li>
+</ul>
+<h3><code>grid_interactor.gd</code> – <code>GridInteractor</code></h3>
+<p>A <code>Node2D</code> script that translates mouse input into grid interactions, making the grid interactive for players or developers.</p>
+<ul>
+<li><strong>Key Functionality &amp; API Highlights:</strong><ul>
+<li><strong>Input Handling:</strong> Processes mouse clicks, drags, and selections on the grid.</li>
+<li><strong>Signals:</strong> Emits various signals to notify other systems of interactions:<ul>
+<li><code>tile_clicked(pos: Vector2i)</code></li>
+<li><code>tiles_selected(positions: Array)</code></li>
+<li><code>actor_clicked(actor: Object)</code></li>
+<li><code>actors_selected(actors: Array)</code></li>
+</ul>
+</li>
+<li><strong>Features:</strong> Includes drag-selection previews using <code>GridRealtimeRenderer</code>, modifier key bitmask helpers (Shift for adding to selection, Ctrl for toggling), and stateful drag handling to differentiate simple clicks from marquee selections.</li>
+</ul>
+</li>
+<li><strong>API Reference:</strong> This is a UI-focused script and does not have a direct API HTML document, but it interacts heavily with <code>GridRealtimeRenderer</code>.</li>
+<li><strong>Usage Details:</strong> See <code>grid_interactor_manual.md</code> for usage details and signal wiring examples.</li>
+</ul>
+<h2>Logic Modules (<code>scripts/modules</code>)</h2>
+<p>Each module in this directory is designed to be self-contained and loosely coupled, focusing on a specific domain of game logic. They typically expose a <code>run_tests()</code> method for headless verification, facilitating automated testing.</p>
+<h3>Spatial &amp; Timeline Modules</h3>
+<p>These modules manage the game's temporal and spatial state, beyond the basic grid structure.</p>
+<ul>
+<li>
+<p><strong><code>turn_timespace.gd</code> - <code>TurnBasedGridTimespace</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> The central orchestrator for turn-based combat. It manages rounds, initiative order, action points (AP), reactions, status ticking, and serialization of the game state.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>start_round()</code>, <code>end_turn()</code>: Control the flow of turns and rounds.</li>
+<li><code>add_actor()</code>, <code>get_current_actor()</code>: Manage actors within the turn order.</li>
+<li><code>register_action()</code>, <code>perform()</code>: Define and execute actions.</li>
+<li>Signals: <code>round_started</code>, <code>turn_started</code>, <code>ap_changed</code>, <code>action_performed</code>, <code>damage_applied</code>, etc., provide real-time updates to other systems.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> Interacts heavily with <code>Statuses</code> (for ticking effects), <code>Abilities</code> (for executing actions), and <code>LogicGridMap</code> (for spatial updates). It also pushes events to the <code>EventBus</code>.</li>
+<li><strong>Testing:</strong> Extensive self-tests cover initiative stability, AP spending, overwatch, status durations, serialization, and event log schema.</li>
+<li><strong>API Reference:</strong> <a href="html/TurnBasedGridTimespace.html">TurnBasedGridTimespace API Documentation</a></li>
+<li><strong>Manual:</strong> See <code>turn_timespace_manual.md</code> for more details.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>grid_logic.gd</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> This module is currently a placeholder stub, primarily used for logging a self-test message. It is intended to house higher-level grid-related game logic that might not fit directly into <code>LogicGridMap</code>'s spatial management.</li>
+<li><strong>API Reference:</strong> <a href="html/GridLogic.html">GridLogic API Documentation</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>grid_visual_logic.gd</code> - <code>GridVisualLogic</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> An immediate-mode renderer designed for debugging or minimal UI visualization of the grid. It allows for drawing colors or custom callables on individual cells.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>set_grid_map()</code>, <code>set_grid_size()</code>: Configure the grid dimensions.</li>
+<li><code>set_cell_state()</code>, <code>clear_cell_state()</code>, <code>update_cells()</code>: Control what is drawn on each cell.</li>
+<li><code>log_event()</code>: For internal debugging.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> Often used in conjunction with <code>LogicGridMap</code> to visualize its state.</li>
+<li><strong>API Reference:</strong> <a href="html/GridVisualLogic.html">GridVisualLogic API Documentation</a></li>
+</ul>
+</li>
+<li>
+<p><strong><code>GridRealtimeRenderer.gd</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> A high-performance visual overlay for the grid, built on Godot's <code>MultiMeshInstance2D</code> for efficient rendering of many small elements. It's used for displaying complex visual feedback like fills, glyphs, strokes, and heatmaps.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>set_ascii_entity()</code>, <code>clear_ascii_entities()</code>, <code>remove_ascii_actor()</code>: Manage ASCII character overlays.</li>
+<li><code>begin_labels()</code>, <code>push_label()</code>, <code>end_labels()</code>: For rendering text labels on the grid.</li>
+<li><code>apply_heatmap_auto()</code>, <code>apply_heatmap()</code>: Visualize numerical data as heatmaps.</li>
+<li><code>set_mark()</code>, <code>set_stroke()</code>, <code>set_hatch()</code>: Draw various visual markers and patterns.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> Used by <code>GridInteractor</code> for drag-selection previews and can be used by any module needing rich visual feedback on the grid.</li>
+<li><strong>API Reference:</strong> <a href="html/GridRealtimeRenderer.html">GridRealtimeRenderer API Documentation</a></li>
+</ul>
+</li>
+</ul>
+<h3>Actor Data &amp; Effects Modules</h3>
+<p>These modules manage the attributes, status effects, abilities, and reactions of actors within the game.</p>
+<ul>
+<li>
+<p><strong><code>attributes.gd</code> - <code>Attributes</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> Centralizes all numeric statistics for actors. It handles base values, additive, multiplicative, and percentage modifiers, and ensures values are clamped within defined ranges.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>set_base()</code>, <code>add_modifier()</code>, <code>clear_modifiers()</code>: Manage attribute values and their modifications.</li>
+<li><code>get_value()</code>: <strong>The primary method to query an actor's final attribute value</strong>, considering all modifiers and ranges.</li>
+<li><code>set_range()</code>: Defines min/max bounds for attributes.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> Heavily used by <code>Abilities</code> (for cost checks) and <code>Statuses</code> (for applying attribute-modifying effects).</li>
+<li><strong>API Reference:</strong> <a href="html/Attributes.html">Attributes API Documentation</a></li>
+<li><strong>Manual:</strong> See <code>attributes_manual.md</code> for more details.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>statuses.gd</code> - <code>Statuses</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> Tracks and manages buffs/debuffs and other temporary status effects on actors and tiles, including their stacks and durations.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>apply_status()</code>: Applies a new status effect.</li>
+<li><code>tick()</code>: Decrements durations of all active statuses and removes expired ones.</li>
+<li>Signals: <code>status_applied</code>, <code>status_removed</code> notify other systems of changes.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> <code>TurnBasedGridTimespace</code> calls <code>tick()</code> on <code>Statuses</code>. <code>Statuses</code> interacts with <code>Attributes</code> to apply the numerical effects of statuses.</li>
+<li><strong>API Reference:</strong> <a href="html/Statuses.html">Statuses API Documentation</a></li>
+<li><strong>Manual:</strong> See <code>statuses_manual.md</code> for more details.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>abilities.gd</code> - <code>Abilities</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> Registers ability definitions, validates if an actor can use an ability, and executes the ability's logic.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>register_ability()</code>, <code>load_from_file()</code>: Define and load abilities.</li>
+<li><code>can_use()</code>: Checks if an ability can be used (integrates with <code>Attributes</code> for cost checks).</li>
+<li><code>execute()</code>: Runs the ability's effects.</li>
+<li><code>tick_cooldowns()</code>: Manages ability cooldowns.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> <code>Loadouts</code> determines which abilities are available. <code>Abilities</code> uses <code>Attributes</code> for resource management and <code>TurnBasedGridTimespace</code> for event logging and signaling.</li>
+<li><strong>API Reference:</strong> <a href="html/Abilities.html">Abilities API Documentation</a></li>
+<li><strong>Manual:</strong> See <code>abilities_manual.md</code> for more details.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>loadouts.gd</code> - <code>Loadouts</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> Computes and manages the set of abilities available to a specific actor, potentially based on equipped items, class, or active status effects.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>grant()</code>: Grants a specific ability ID to an actor.</li>
+<li><code>get_available()</code>: Returns a list of all abilities an actor currently has access to.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> Primarily queried by UI systems or <code>TurnBasedGridTimespace</code> to determine an actor's available actions.</li>
+<li><strong>API Reference:</strong> <a href="html/Loadouts.html">Loadouts API Documentation</a></li>
+<li><strong>Manual:</strong> See <code>loadouts_manual.md</code> for more details.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>reactions.gd</code> - <code>Reactions</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> Queues and resolves reactive opportunities (e.g., attacks of opportunity, counter-spells) in a First-In, First-Out (FIFO) order.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>trigger()</code>: Adds a reaction to the queue.</li>
+<li><code>resolve_next()</code>: Processes the next reaction in the queue.</li>
+<li><code>get_pending()</code>: Returns the list of reactions awaiting resolution.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> <code>TurnBasedGridTimespace</code> can trigger reactions based on game events (e.g., movement into line of sight).</li>
+<li><strong>API Reference:</strong> <a href="html/Reactions.html">Reactions API Documentation</a></li>
+<li><strong>Manual:</strong> See <code>reactions_manual.md</code> for more details.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>event_bus.gd</code> - <code>EventBus</code></strong></p>
+<ul>
+<li><strong>Purpose:</strong> An append-only, structured log for all significant game events. It's fundamental for analytics, debugging, and enabling deterministic replays of game sessions.</li>
+<li><strong>Key API:</strong><ul>
+<li><code>push()</code>: Adds an event dictionary to the log.</li>
+<li><code>serialize()</code>, <code>replay()</code>: For saving and loading event logs.</li>
+</ul>
+</li>
+<li><strong>Interaction:</strong> Almost all other modules push events to the <code>EventBus</code> to maintain a comprehensive record of game state changes.</li>
+<li><strong>API Reference:</strong> <a href="html/EventBus.html">EventBus API Documentation</a></li>
+<li><strong>Manual:</strong> See <code>event_bus_manual.md</code> for more details.</li>
+</ul>
+</li>
+</ul>
+<h3>Integration Layer</h3>
+<p>This module acts as a central point for wiring together the core logic services.</p>
+<ul>
+<li><strong><code>runtime_services.gd</code> - <code>RuntimeServices</code></strong><ul>
+<li><strong>Purpose:</strong> Aggregates all core logic modules (e.g., <code>LogicGridMap</code>, <code>TurnBasedGridTimespace</code>, <code>Attributes</code>, <code>Statuses</code>, <code>Abilities</code>, <code>Loadouts</code>, <code>Reactions</code>, <code>EventBus</code>) into a single <code>Node</code>. This provides a convenient single entry point for gameplay scenes to access the entire backend logic state.</li>
+<li><strong>Key API:</strong> Its members are direct references to instances of the other core modules (e.g., <code>runtime_services.grid_map</code>, <code>runtime_services.timespace</code>).</li>
+<li><strong>Interaction:</strong> On <code>_init</code>, it wires <code>TurnBasedGridTimespace</code> to a <code>LogicGridMap</code> and sets up cross-module references. Its <code>run_tests()</code> method performs a minimal integration test and then executes each aggregated module's self-tests, aggregating results for CI.</li>
+<li><strong>API Reference:</strong> <a href="html/RuntimeServices.html">RuntimeServices API Documentation</a></li>
+</ul>
+</li>
+</ul>
+<h2>UI Components</h2>
+<p>These scripts are responsible for displaying game information and handling player input.</p>
+<ul>
+<li><strong><code>variable_display.gd</code> - <code>VariableDisplay</code></strong><ul>
+<li><strong>Purpose:</strong> A panel script typically attached to <code>scenes/MainHUD.tscn</code>. It subscribes to <code>RuntimeServices</code> signals to display real-time game information (e.g., current round, active actor).</li>
+<li><strong>Key API:</strong> Allows modules to register custom stats via <code>register_stat()</code> with optional formatting helpers, making it flexible for displaying various game data.</li>
+<li><strong>Interaction:</strong> Listens to signals from <code>RuntimeServices</code> and its aggregated modules to update the UI.</li>
+</ul>
+</li>
+</ul>
+<h2>Tests</h2>
+<p>The project includes a robust testing framework to ensure the stability and correctness of its modules.</p>
+<ul>
+<li><strong><code>scripts/test_runner.gd</code></strong><ul>
+<li><strong>Purpose:</strong> The main headless test harness. It iterates over module instances, calls their <code>run_tests()</code> methods, prints pass/fail summaries, and exits with the number of failures.</li>
+<li><strong>Best Practice:</strong> Each module is designed to free temporary objects to avoid memory leaks during testing.</li>
+</ul>
+</li>
+<li><strong><code>scripts/tests/grid_visual_logic_test.gd</code></strong><ul>
+<li><strong>Purpose:</strong> Provides a small SceneTree specifically for testing <code>GridVisualLogic</code>. It instantiates the visual logic module and exercises its color and callable drawing paths to ensure visual correctness.</li>
+</ul>
+</li>
+</ul>
+<h2>Documentation</h2>
+<p>Existing manuals in <code>docs/</code> describe individual modules in more detail. This overview ties them together and highlights additional scripts (like <code>Workspace</code>, <code>GridInteractor</code>, <code>BaseActor</code>) that are crucial for understanding the project's structure and development workflow. Refer to the specific manual for in-depth API usage and examples for each module.</p>

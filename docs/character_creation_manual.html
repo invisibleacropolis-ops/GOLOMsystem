@@ -1,0 +1,149 @@
+<h1>Character Creation Module Manual</h1>
+<p><code>character_creator.gd</code> and <code>character_creation_data.gd</code> together provide the functionality for creating new player characters, including name input, attribute distribution, and selection of skills and powers.</p>
+<h2>Responsibilities</h2>
+<ul>
+<li><strong><code>character_creator.gd</code></strong>:<ul>
+<li>Manages the flow of the character creation process through different states (name input, attribute distribution, skill selection, power selection, confirmation).</li>
+<li>Interacts with <code>AsciiUIManager</code> to display prompts, menus, and receive user input.</li>
+<li>Handles user input for each creation step.</li>
+<li>Validates input and transitions between creation states.</li>
+<li>Collects all chosen character data.</li>
+</ul>
+</li>
+<li><strong><code>character_creation_data.gd</code></strong>:<ul>
+<li>Loads and provides access to predefined skill and power data from JSON files (<code>skills.json</code>, <code>powers.json</code>).</li>
+<li>Acts as a data repository for character creation options.</li>
+</ul>
+</li>
+</ul>
+<h2>Core Concepts and API Details</h2>
+<p>The Character Creation module guides the player through the process of defining their new character, ensuring all necessary attributes, skills, and powers are selected before the character is finalized.</p>
+<h3>Class: <code>CharacterCreator</code> (inherits from <code>Node</code>)</h3>
+<p>This is the main class orchestrating the character creation process.</p>
+<h4>Members</h4>
+<ul>
+<li><strong><code>_current_state</code></strong> (<code>CreationState</code>): An enum representing the current step in the character creation flow (e.g., <code>NAME_INPUT</code>, <code>ATTRIBUTE_DISTRIBUTION</code>).</li>
+<li><strong><code>_character_name</code></strong> (<code>String</code>): Stores the name entered by the player.</li>
+<li><strong><code>_attribute_points_remaining</code></strong> (<code>int</code>): The number of points the player has left to distribute among attributes.</li>
+<li><strong><code>_character_attributes</code></strong> (<code>Dictionary</code>): Stores the chosen values for each attribute (e.g., <code>{"PWR": 3, "SPD": 2}</code>).</li>
+<li><strong><code>_selected_skills</code></strong> (<code>Array[String]</code>): A list of IDs of skills chosen by the player.</li>
+<li><strong><code>_selected_powers</code></strong> (<code>Array[String]</code>): A list of IDs of powers chosen by the player.</li>
+</ul>
+<h4>Methods</h4>
+<ul>
+<li><strong><code>start_character_creation() -&gt; void</code></strong>
+    Initializes the character creation process, setting the initial state to name input and prompting the user.</li>
+<li><strong><code>_process_input(command: String) -&gt; void</code></strong>
+    Internal method called by <code>AsciiUIManager</code> when a command is entered. It dispatches the command to the appropriate handler based on <code>_current_state</code>.</li>
+<li><strong><code>_handle_name_input(command: String) -&gt; void</code></strong>
+    Handles input for the character name, validates it, and transitions to attribute distribution.</li>
+<li><strong><code>_display_attribute_distribution() -&gt; void</code></strong>
+    Displays the current attribute values and remaining points, prompting the user to distribute points.</li>
+<li><strong><code>_handle_attribute_distribution(command: String) -&gt; void</code></strong>
+    Handles input for attribute point allocation, allowing navigation and modification of attribute values.</li>
+<li><strong><code>_display_skill_selection() -&gt; void</code></strong>
+    Displays the list of available skills and the player's current selections.</li>
+<li><strong><code>_handle_skill_selection(command: String) -&gt; void</code></strong>
+    Handles input for skill selection, allowing toggling of skills and progression to power selection.</li>
+<li><strong><code>_display_power_selection() -&gt; void</code></strong>
+    Displays the list of available powers and the player's current selections.</li>
+<li><strong><code>_handle_power_selection(command: String) -&gt; void</code></strong>
+    Handles input for power selection, allowing toggling of powers and progression to confirmation.</li>
+<li><strong><code>_display_confirmation() -&gt; void</code></strong>
+    Displays a summary of the chosen character details and prompts for final confirmation or revision.</li>
+<li><strong><code>_handle_confirmation(command: String) -&gt; void</code></strong>
+    Handles the final confirmation, creating the character or allowing the user to return to previous steps.</li>
+</ul>
+<h3>Class: <code>CharacterCreationData</code> (inherits from <code>Node</code>)</h3>
+<p>This class is responsible for loading and providing access to character creation data.</p>
+<h4>Members</h4>
+<ul>
+<li><strong><code>skills_data</code></strong> (<code>Dictionary</code>): Stores all loaded skill definitions.</li>
+<li><strong><code>powers_data</code></strong> (<code>Dictionary</code>): Stores all loaded power definitions.</li>
+</ul>
+<h4>Methods</h4>
+<ul>
+<li><strong><code>load_skills_data() -&gt; void</code></strong>
+    Loads skill definitions from <code>res://data/skills.json</code>.</li>
+<li><strong><code>load_powers_data() -&gt; void</code></strong>
+    Loads power definitions from <code>res://data/powers.json</code>.</li>
+<li><strong><code>get_skill_data(skill_id: String) -&gt; Dictionary</code></strong>
+    Retrieves the data for a specific skill by its ID.</li>
+<li><strong><code>get_all_skills() -&gt; Dictionary</code></strong>
+    Returns all loaded skill data.</li>
+<li><strong><code>get_power_data(power_id: String) -&gt; Dictionary</code></strong>
+    Retrieves the data for a specific power by its ID.</li>
+<li><strong><code>get_all_powers() -&gt; Dictionary</code></strong>
+    Returns all loaded power data.</li>
+</ul>
+<h2>Usage Pattern</h2>
+<p>To initiate the character creation process, ensure <code>CharacterCreator</code> and <code>CharacterCreationData</code> are added to the scene tree (e.g., in <code>root.gd</code> for headless mode) and <code>CharacterCreator.start_character_creation()</code> is called.</p>
+<pre><code class="language-gdscript"># In root.gd (example for headless mode)
+var character_creation_data_instance = preload(&quot;res://scripts/character_creation/character_creation_data.gd&quot;).new()
+add_child(character_creation_data_instance)
+
+var character_creator_instance = preload(&quot;res://scripts/character_creation/character_creator.gd&quot;).new()
+character_creator_instance.ascii_ui_manager_path = _ascii_ui_manager.get_path()
+character_creator_instance.character_creation_data_path = character_creation_data_instance.get_path()
+add_child(character_creator_instance)
+
+_ascii_ui_manager.command_entered.connect(character_creator_instance._on_command_entered)
+
+character_creator_instance.start_character_creation()
+</code></pre>
+<h2>Integration Notes</h2>
+<ul>
+<li><strong><code>AsciiUIManager</code> Dependency:</strong> The <code>CharacterCreator</code> relies heavily on <code>AsciiUIManager</code> for all user interaction. Ensure <code>AsciiUIManager</code> is properly set up and its <code>command_entered</code> signal is connected to <code>CharacterCreator._on_command_entered</code>.</li>
+<li><strong>Data-Driven Skills and Powers:</strong> Skill and power definitions are externalized in <code>skills.json</code> and <code>powers.json</code>, allowing for easy modification and expansion without code changes.</li>
+<li><strong>Character Finalization:</strong> Upon confirmation, the <code>_handle_confirmation</code> method is the point where the finalized character data (name, attributes, selected skills, selected powers) should be used to instantiate a <code>PlayerActor</code> or save the character to a persistent storage.</li>
+</ul>
+<h2>Testing</h2>
+<p>Testing for the Character Creation module would involve simulating user input sequences and verifying that:</p>
+<ul>
+<li>The state transitions occur correctly.</li>
+<li>Attribute points are distributed and validated properly.</li>
+<li>Skills and powers are selected/deselected as expected.</li>
+<li>The final character summary is accurate.</li>
+</ul>
+<p>Example (conceptual, would require a test runner to simulate stdin):</p>
+<pre><code class="language-gdscript"># This is conceptual and would require a test harness to simulate stdin input
+# and capture stdout output for verification.
+
+var creator = CharacterCreator.new()
+var ui_manager = AsciiUIManager.new() # Mock or actual instance
+var data_loader = CharacterCreationData.new() # Mock or actual instance
+
+creator.ascii_ui_manager_path = ui_manager.get_path()
+creator.character_creation_data_path = data_loader.get_path()
+
+creator.start_character_creation()
+
+# Simulate name input
+ui_manager._command_input_string = &quot;HeroName&quot;
+creator._process_input(&quot;enter&quot;)
+
+# Simulate attribute distribution (e.g., increase PWR by 5)
+creator._process_input(&quot;d&quot;) # PWR +1
+creator._process_input(&quot;d&quot;) # PWR +1
+creator._process_input(&quot;d&quot;) # PWR +1
+creator._process_input(&quot;d&quot;) # PWR +1
+creator._process_input(&quot;d&quot;) # PWR +1
+# ... distribute remaining points ...
+creator._process_input(&quot;enter&quot;) # Confirm attributes
+
+# Simulate skill selection
+creator._process_input(&quot;enter&quot;) # Select first skill
+creator._process_input(&quot;s&quot;) # Move to next skill
+creator._process_input(&quot;enter&quot;) # Select second skill
+creator._process_input(&quot;f&quot;) # Finish skills
+
+# Simulate power selection
+creator._process_input(&quot;enter&quot;) # Select first power
+creator._process_input(&quot;f&quot;) # Finish powers
+
+# Simulate confirmation
+creator._process_input(&quot;y&quot;) # Confirm character
+
+# Assertions would go here to check the final character data
+# and that the game would proceed as expected.
+</code></pre>

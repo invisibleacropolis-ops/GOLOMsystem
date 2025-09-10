@@ -1,0 +1,225 @@
+<h1>Vertical Slice Proposal — XCOM‑Style Battle Mode</h1>
+<p>This master plan consolidates the project docs into a concrete, buildable vertical slice for Golom. It specifies scope, success criteria, new work, file touchpoints, and acceptance tests to ship a small, fully playable tactical encounter.</p>
+<h2>Scope &amp; Success Criteria</h2>
+<ul>
+<li>Play a single skirmish: 2–3 player units vs. 2–3 enemies on a small procedural map (about 16×16–24×24).</li>
+<li>Core loop: select unit → preview move range → move → attack or special → end turn; enemies take turns with simple AI.</li>
+<li>Tactics: action points, line of sight, basic cover (half/full), hit/damage using Attributes.</li>
+<li>Visuals: grid highlights for range/paths/targets via <code>GridRealtimeRenderer</code> with minimal HUD (HP/AP, ability hotbar, end turn).</li>
+<li>Determinism and logs: actions and outcomes recorded to <code>EventBus</code>; headless tests pass; ASCII smoke run is stable.</li>
+</ul>
+<h2>Player Experience</h2>
+<ul>
+<li>Single mission loads into a compact map with visible obstacles (LOS blockers, cover tiles) and two squads placed apart.</li>
+<li>Click a unit to select; reachable tiles heat‑mapped; path preview on hover; confirm to move; valid targets highlighted when in LOS.</li>
+<li>Basic attack (melee or ranged) and one simple special per archetype; end turn button advances to enemy AI.</li>
+<li>Win: eliminate opposing squad. Loss: player squad eliminated.</li>
+</ul>
+<h2>Systems To Build or Finish (What’s Next)</h2>
+<p>1) Squad Control + Turn UI
+- Leverage: <code>scripts/modules/turn_timespace.gd</code>, <code>scripts/modules/loadouts.gd</code>, <code>scripts/modules/attributes.gd</code>, signals in docs/turn_timespace_manual.md.
+- New Work:
+  - Minimal HUD: current actor, HP/AP, ability buttons, End Turn.
+  - Unit selection and focus handoff between player input and AI based on <code>turn_started/turn_ended</code>.
+- Files (new/changed):
+  - New <code>scripts/ui/battle_hud.gd</code> + <code>scenes/BattleHUD.tscn</code> (hooks into <code>RuntimeServices</code> signals and <code>Loadouts.get_available()</code>).
+  - Update <code>scripts/core/root.gd</code> or add <code>scenes/VerticalSlice.tscn</code> + controller script to assemble slice scene.</p>
+<p>2) Action Binding (Hotbar → Abilities/Timespace)
+- Leverage: <code>scripts/modules/abilities.gd</code>, <code>scripts/modules/loadouts.gd</code>, <code>scripts/modules/turn_timespace.gd</code>, <code>data/actions.json</code>.
+- New Work:
+  - Define canonical actions: <code>move</code>, <code>attack_basic</code>, per‑archetype special in <code>data/actions.json</code>.
+  - Bridge HUD buttons → <code>Abilities.can_use()</code> → <code>Abilities.execute()</code> and/or <code>TurnBasedGridTimespace.perform()</code>.
+- Files:
+  - Expand <code>data/actions.json</code> with <code>attack_basic</code>, archetype specials, and Move metadata for UI.
+  - <code>scripts/ui/battle_hud.gd</code> hotbar wiring; <code>scripts/game/battle_controller.gd</code> to coordinate calls.</p>
+<p>3) Movement Preview + Execution
+- Leverage: <code>scripts/grid/grid_map.gd</code> (<code>find_path</code>, occupancy), <code>scripts/modules/GridRealtimeRenderer.gd</code> overlays, <code>turn_timespace.gd</code> AP spend.
+- New Work:
+  - Compute reachable set from AP budget (sum path tile cost vs. ACT value from <code>Attributes</code>).
+  - Heatmap reachable tiles; stroke path preview; click to confirm; timespace deducts AP and moves actor via <code>LogicGridMap.move_actor()</code>.
+- Files:
+  - <code>scripts/grid/grid_interactor.gd</code> small additions for path hover; visuals via <code>GridRealtimeRenderer</code>.
+  - <code>scripts/game/battle_controller.gd</code> reachability/path logic and AP budgeting.</p>
+<p>4) Attack Ability (Hit/Damage Rules)
+- Leverage: <code>abilities.gd</code> (costs, cooldowns), <code>attributes.gd</code> (HLTH, ACT, PWR/ACC), <code>event_bus.gd</code> (log), <code>grid_map.gd</code> (LOS check helper).
+- New Work:
+  - Define deterministic hit formula: e.g., Hit if LOS and range ≤ weapon range; start without RNG (or fixed seed). Damage = <code>PWR</code> with cover/LOS modifiers.
+  - Emit <code>damage_applied</code> signal (already in docs) and reduce target HP via <code>Attributes</code> or actor property mediated by Attributes.
+- Files:
+  - Extend <code>data/actions.json</code> for <code>attack_basic</code> schema: {range, uses_los, damage_key, cover_mod}.
+  - Implement execution branch in <code>abilities.gd</code> (data‑driven: read range/los, call grid/attr, push events).</p>
+<p>5) Cover Mechanics (Half/Full)
+- Leverage: <code>grid_map.gd</code> (<code>get_cover/set_cover</code>), <code>attributes.gd</code> modifiers, docs/grid_map_manual.md.
+- New Work:
+  - Author a few tiles with assigned cover types or set directional cover at runtime during map gen.
+  - Apply defense/hit modifiers when target is in cover (e.g., half: −20% damage, full: −40%).
+  - Visual indicators (icon/outline) for covered tiles/targets.
+- Files:
+  - Map gen step to place cover; <code>scripts/modules/procedural_map_generator.gd</code> small hook or a wrapper.
+  - <code>scripts/game/combat_rules.gd</code> helper with <code>compute_cover_bonus()</code> consumed by abilities and AI.</p>
+<p>6) LOS + Targeting UX
+- Leverage: <code>grid_map.gd</code> (<code>has_line_of_sight</code>, LOS blockers), <code>GridRealtimeRenderer</code> for previews.
+- New Work:
+  - Hover target tiles highlights if LOS true; draw line/marks; filter valid targets list.
+- Files:
+  - <code>scripts/game/battle_controller.gd</code> hover targeting; <code>battle_hud.gd</code> tooltip with hit/damage preview.</p>
+<p>7) Enemy AI (Simple)
+- Leverage: <code>turn_timespace.gd</code> current actor/turn signals, <code>grid_map.gd</code> path/LOS, <code>abilities.gd</code> execution.
+- New Work:
+  - Stateless heuristic per enemy: if LOS to player in range → attack; else path to nearest cover within AP; else move toward nearest player.
+- Files:
+  - New <code>scripts/ai/simple_enemy_ai.gd</code> with <code>take_turn(actor)</code> used by controller when <code>turn_started</code> for enemy faction.</p>
+<p>8) Win/Loss Conditions
+- Leverage: <code>turn_timespace.gd</code> battle_over signal (per docs), <code>grid_map.gd</code> occupancy queries.
+- New Work:
+  - Monitor alive actors per faction; end on zero; show result screen/panel.
+- Files:
+  - <code>scripts/game/battle_controller.gd</code> victory check; HUD panel in <code>BattleHUD.tscn</code>.</p>
+<p>9) Map Setup (Small Procedural Sandbox)
+- Leverage: <code>scripts/modules/procedural_map_generator.gd</code>, <code>scripts/modules/procedural_world.gd</code>, <code>scripts/integration/t2g_bridge.gd</code>, <code>data/terrain.json</code>.
+- New Work:
+  - Parameterized small map (seeded), sprinkle <code>stone</code> LOS blockers, establish cover at edges of blockers, place spawn clusters.
+- Files:
+  - <code>scenes/VerticalSlice.tscn</code> world scene wiring generator → T2G bridge → <code>RuntimeServices</code>.</p>
+<p>10) Data Setup (Archetypes &amp; Baselines)
+- Leverage: <code>scripts/core/base_actor.gd</code>, <code>scripts/actors/player_actor.gd</code>, <code>scripts/actors/enemy_actor.gd</code>, <code>data/*.json</code>.
+- New Work:
+  - Define two archetypes: Rifle Trooper (ranged special: overwatch or burst) and Bruiser (melee dash or stun). Enemies mirror simplified stats.
+  - Seed <code>Attributes</code> bases (HLTH, ACT per round, PWR/ACC) via a loader or on spawn.
+  - <code>Loadouts</code> grants: Move, Attack Basic, Special.
+- Files:
+  - Small loader in <code>scripts/game/archetypes.gd</code> or in <code>battle_controller.gd</code> to apply <code>Attributes.set_base()</code> and <code>Loadouts.grant()</code> at spawn.</p>
+<p>11) Minimal Telemetry &amp; Replays
+- Leverage: <code>scripts/modules/event_bus.gd</code>, <code>turn_timespace.gd</code> event log/serialize.
+- New Work:
+  - Ensure major events recorded: round/turn, move, ability, damage, KO, victory.
+- Files:
+  - None beyond using <code>EventBus.push()</code> in controller/abilities where missing.</p>
+<p>12) Tests, Headless + ASCII
+- Leverage: <code>scripts/test_runner.gd</code>, <code>scripts/tools/ascii_console.gd</code>, docs/headless_tooling.md.
+- New Work:
+  - Add <code>scripts/tests/vertical_slice_test.gd</code>: headless setup, place 1v1, exercise move→attack→victory; assert HP/AP changes and <code>EventBus</code> schema.
+  - Add CI smoke: run ASCII for a fixed script of commands; confirm no errors.
+- Files:
+  - New test script; optional <code>logs/ascii_commands.txt</code> example.</p>
+<h2>Deliverables &amp; File Changes</h2>
+<ul>
+<li>Scenes/UI</li>
+<li>New: <code>scenes/VerticalSlice.tscn</code> (world root + <code>RuntimeServices</code> + <code>BattleHUD</code> + <code>GridRealtimeRenderer</code>).</li>
+<li>
+<p>New: <code>scenes/BattleHUD.tscn</code> + <code>scripts/ui/battle_hud.gd</code> (HP/AP/abilities/end turn, signal wiring).</p>
+</li>
+<li>
+<p>Gameplay/Control</p>
+</li>
+<li>New: <code>scripts/game/battle_controller.gd</code> (state, selection, previews, turn routing, victory checks).</li>
+<li>New: <code>scripts/game/combat_rules.gd</code> (cover/damage helpers; single import for formulae).</li>
+<li>New: <code>scripts/ai/simple_enemy_ai.gd</code> (seek cover → attack → advance fallback).</li>
+<li>
+<p>Light edits: <code>scripts/grid/grid_interactor.gd</code> (hover path preview hooks).</p>
+</li>
+<li>
+<p>Data</p>
+</li>
+<li>Update: <code>data/actions.json</code> with <code>attack_basic</code> and two specials.</li>
+<li>
+<p>Optional: <code>data/actors.json</code> (if preferred) or encode bases in <code>battle_controller.gd</code> using <code>Attributes.set_base()</code>.</p>
+</li>
+<li>
+<p>Tests/Tooling</p>
+</li>
+<li>New: <code>scripts/tests/vertical_slice_test.gd</code> integrated into <code>scripts/test_runner.gd</code> discovery.</li>
+<li>Optional: <code>logs/ascii_commands.txt</code> for scripted ASCII smoke.</li>
+</ul>
+<h2>Implementation Notes (by Module)</h2>
+<ul>
+<li>Turn Manager (<code>scripts/modules/turn_timespace.gd</code>)</li>
+<li>Ensure <code>timespace.set_grid_map()</code> called before <code>start_round()</code> (see docs/runtime_services.md).</li>
+<li>
+<p>Use <code>turn_started/turn_ended/ap_changed/action_performed/damage_applied</code> signals to drive UI and AI.</p>
+</li>
+<li>
+<p>Grid Map (<code>scripts/grid/grid_map.gd</code>)</p>
+</li>
+<li>Use <code>find_path</code> and cost rules to compute reachable set; avoid diagonal initially; rely on <code>is_occupied</code>/footprints.</li>
+<li>
+<p>Author cover with <code>set_cover()</code> during map build; consult via <code>get_cover()</code> in combat.</p>
+</li>
+<li>
+<p>Abilities/Loadouts</p>
+</li>
+<li>Keep abilities data‑driven via <code>data/actions.json</code>; <code>Abilities.execute()</code> applies costs/cooldowns, emits events; call into <code>Attributes</code> for spend and damage.</li>
+<li>
+<p><code>Loadouts.get_available(actor)</code> drives hotbar and AI action choices.</p>
+</li>
+<li>
+<p>Attributes/Statuses</p>
+</li>
+<li>
+<p>Funnel all reads through <code>get_value()</code>. Use <code>set_range("HLTH", 0, max)</code> early. Apply temporary buffs via <code>Statuses</code> if needed.</p>
+</li>
+<li>
+<p>Renderer/Interactor</p>
+</li>
+<li>
+<p>Prefer <code>GridRealtimeRenderer</code> for reachable/target highlights and ASCII debug; keep <code>GridVisualLogic</code> only for debug.</p>
+</li>
+<li>
+<p>EventBus</p>
+</li>
+<li>Standardize event dictionaries with <code>t</code> field: e.g., <code>move</code>, <code>attack</code>, <code>damage</code>, <code>ko</code>, <code>turn_start</code>, <code>turn_end</code>, <code>victory</code>.</li>
+</ul>
+<h2>Acceptance Tests</h2>
+<ul>
+<li>Headless Module Tests</li>
+<li>Command: <code>scripts/godot4.cmd --headless --path . --script scripts/test_runner.gd -- --module=runtime_services</code> (then all).</li>
+<li>
+<p>Passing criteria: 0 failures; new <code>vertical_slice_test.gd</code> asserts: AP spend on move, LOS‑gated attack, HP reduction, victory detection.</p>
+</li>
+<li>
+<p>ASCII Smoke</p>
+</li>
+<li>Command: <code>pwsh -File scripts/run_headless.ps1 -Strict</code> or <code>pwsh -File scripts/ascii_play.ps1 -Pipe &lt; logs/ascii_commands.txt</code>.</li>
+<li>
+<p>Passing criteria: no errors; final ASCII board shows victory text; logs include <code>victory</code> event.</p>
+</li>
+<li>
+<p>Manual Slice Run (GUI)</p>
+</li>
+<li>Open <code>Root.tscn</code> or <code>scenes/VerticalSlice.tscn</code> and play.</li>
+<li>Criteria: select unit, visualize range/path, execute move and attack, enemy responds, win/loss resolves; HUD reflects HP/AP; overlay highlights correct tiles.</li>
+</ul>
+<h2>Milestones &amp; Estimates</h2>
+<ul>
+<li>Phase 1: Movement + Turn Handoff (1–2 weeks)</li>
+<li>
+<p>Battle controller, HUD skeleton, selection, reachable heatmap, AP spend, end turn; basic victory check.</p>
+</li>
+<li>
+<p>Phase 2: Combat + Cover + LOS + AI (2–3 weeks)</p>
+</li>
+<li>
+<p>Attack ability, damage rules, cover application, LOS gating, enemy AI v1; HUD hotbar; event logging.</p>
+</li>
+<li>
+<p>Phase 3: Polish + Specials + Tests (1–2 weeks)</p>
+</li>
+<li>Two unit specials, targeting previews, better feedback (labels/effects), tuning, headless test coverage, ASCII script.</li>
+</ul>
+<h2>Risks &amp; Assumptions</h2>
+<ul>
+<li>Cover representation: ensure <code>set_cover()</code> supports required orientations; fallback to tagged tiles if directional cover is limited.</li>
+<li>Damage/hit model: start deterministic to avoid balance time; RNG can be added later.</li>
+<li>Performance: <code>GridRealtimeRenderer</code> batching is sufficient for small maps; monitor with <code>scripts/tests/grid_renderer_benchmark.gd</code>.</li>
+<li>Data workflow: prefer <code>data/actions.json</code>/attributes seeding to avoid hardcoding; keep formulas centralized in <code>combat_rules.gd</code>.</li>
+</ul>
+<h2>Out of Scope (Post‑Slice)</h2>
+<ul>
+<li>Campaign/meta progression, inventories, advanced AI planning, sound/music, saves/loads, cinematics, destruction, multiplayer.</li>
+</ul>
+<hr />
+<p>References:
+- docs/README.md (vertical slice context)
+- docs/backend_architecture.md, docs/runtime_services.md, docs/turn_timespace_manual.md
+- docs/grid_map_manual.md, docs/grid_realtime_renderer_manual.md
+- docs/abilities_manual.md, docs/attributes_manual.md, docs/event_bus_manual.md</p>

@@ -1,0 +1,13 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+Godot_v4.4.1-stable_linux.x86_64.zip
+godot4
+*.import
+*.uid
+godot_import.log
+godot_upgrade.log
+logs/*.log
+logs/*.err.log
+logs/*.txt
+!logs/.gitkeep

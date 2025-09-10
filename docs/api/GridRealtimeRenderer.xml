@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="GridRealtimeRenderer" inherits="Node2D" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_ready">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="_process">
+			<return type="void" />
+			<param index="0" name="delta" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_ascii_entity">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<param index="1" name="symbol" type="String" />
+			<param index="2" name="color" type="Color" default="Color(1, 1, 1, 1)" />
+			<param index="3" name="priority" type="int" default="0" />
+			<param index="4" name="id" type="int" default="-1" />
+			<param index="5" name="z_index" type="int" default="0" />
+			<description>
+				Entities may stack in a single cell; entries are sorted first by `priority` then by `z_index` so background layers remain beneath overlays. `id` identifies the source actor for selective removal.
+			</description>
+		</method>
+		<method name="clear_ascii_entities">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="remove_ascii_actor">
+			<return type="void" />
+			<param index="0" name="actor" type="Variant" />
+			<description>
+				Remove a specific actor's ASCII footprint using cached cell positions.
+			</description>
+		</method>
+		<method name="_remove_ascii_actor_rid">
+			<return type="void" />
+			<param index="0" name="rid" type="int" />
+			<description>
+				Internal helper that erases cached cells and state for an actor RID.
+			</description>
+		</method>
+		<method name="collect_ascii_entities">
+			<return type="void" />
+			<param index="0" name="actors" type="Array" />
+			<description>
+			</description>
+		</method>
+		<method name="_get_cached_footprint">
+			<return type="Vector2i[]" />
+			<param index="0" name="rid" type="int" />
+			<param index="1" name="size" type="Vector2i" />
+			<description>
+				Retrieve a cached array of relative cell offsets for an actor's footprint. Footprints are keyed by actor RID and recalculated only when `size` changes.
+			</description>
+		</method>
+		<method name="get_ascii_frame">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="set_ascii_stream">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="set_ascii_rate">
+			<return type="void" />
+			<param index="0" name="hz" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_symbol_map">
+			<return type="void" />
+			<param index="0" name="m" type="Dictionary" />
+			<description>
+			</description>
+		</method>
+		<method name="_lookup_symbol_for_actor">
+			<return type="Dictionary" />
+			<param index="0" name="actor" type="Object" />
+			<description>
+			</description>
+		</method>
+		<method name="_build_layers">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="_mark_mi_visible_refresh">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="_build_label_pool">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="_build_palette_overlay">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="set_shader_mode">
+			<return type="void" />
+			<param index="0" name="mode" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="begin_labels">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="push_label">
+			<return type="void" />
+			<param index="0" name="text" type="String" />
+			<param index="1" name="p" type="Vector2i" />
+			<param index="2" name="color" type="Color" default="Color(1, 1, 1, 1)" />
+			<param index="3" name="y_offset" type="float" default="0.0" />
+			<description>
+			</description>
+		</method>
+		<method name="end_labels">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="_draw">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="_idx">
+			<return type="int" />
+			<param index="0" name="p" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="in_bounds">
+			<return type="bool" />
+			<param index="0" name="p" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="_alpha_over">
+			<return type="Color" />
+			<param index="0" name="a" type="Color" />
+			<param index="1" name="b" type="Color" />
+			<description>
+			</description>
+		</method>
+		<method name="set_visibility">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<param index="1" name="v" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="ensure_channel">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="set_channel_value">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="p" type="Vector2i" />
+			<param index="2" name="v" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="apply_heatmap_auto">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="alpha" type="float" default="0.8" />
+			<description>
+			</description>
+		</method>
+		<method name="apply_heatmap">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="vmin" type="float" />
+			<param index="2" name="vmax" type="float" />
+			<param index="3" name="alpha" type="float" default="0.8" />
+			<description>
+			</description>
+		</method>
+		<method name="set_cell_color">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<param index="1" name="color" type="Color" />
+			<description>
+			</description>
+		</method>
+		<method name="set_cells_color_bulk">
+			<return type="void" />
+			<param index="0" name="cells" type="PackedVector2Array" />
+			<param index="1" name="color" type="Color" />
+			<description>
+			</description>
+		</method>
+		<method name="apply_color_map">
+			<return type="void" />
+			<param index="0" name="colors" type="Array" />
+			<description>
+			</description>
+		</method>
+		<method name="clear_all">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="set_mark">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<param index="1" name="mark_type" type="int" />
+			<param index="2" name="color" type="Color" default="Color(1, 1, 1, 1)" />
+			<param index="3" name="size01" type="float" default="1.0" />
+			<param index="4" name="rotation_rad" type="float" default="0.0" />
+			<param index="5" name="thickness01" type="float" default="0.5" />
+			<description>
+			</description>
+		</method>
+		<method name="clear_mark">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="set_stroke">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<param index="1" name="color" type="Color" default="Color(1, 1, 1, 1)" />
+			<param index="2" name="thickness01" type="float" default="0.25" />
+			<param index="3" name="corner01" type="float" default="0.0" />
+			<description>
+			</description>
+		</method>
+		<method name="clear_stroke">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="_v2i" qualifiers="static">
+			<return type="Vector2i" />
+			<param index="0" name="x" type="int" />
+			<param index="1" name="y" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="stroke_outline_for">
+			<return type="void" />
+			<param index="0" name="tiles" type="PackedVector2Array" />
+			<param index="1" name="color" type="Color" default="Color(1, 1, 1, 0.9)" />
+			<param index="2" name="thickness01" type="float" default="0.15" />
+			<param index="3" name="corner01" type="float" default="0.0" />
+			<description>
+			</description>
+		</method>
+		<method name="set_hatch">
+			<return type="void" />
+			<param index="0" name="p" type="Vector2i" />
+			<param index="1" name="pattern" type="int" />
+			<param index="2" name="color" type="Color" />
+			<param index="3" name="scale01" type="float" default="0.5" />
+			<param index="4" name="angle01" type="float" default="0.0" />
+			<param index="5" name="anim01" type="float" default="0.0" />
+			<description>
+			</description>
+		</method>
+		<method name="set_world_offset">
+			<return type="void" />
+			<param index="0" name="offset" type="Vector2" />
+			<description>
+			</description>
+		</method>
+		<method name="set_grid_size">
+			<return type="void" />
+			<param index="0" name="w" type="int" />
+			<param index="1" name="h" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="generate_ascii_field">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="_ansi_color">
+			<return type="String" />
+			<param index="0" name="c" type="Color" />
+			<description>
+			</description>
+		</method>
+		<method name="update_input">
+			<return type="void" />
+			<param index="0" name="pos" type="Vector2i" />
+			<param index="1" name="action" type="String" />
+			<description>
+				Record an interaction on the ASCII grid. Supported actions: - "select" : highlight a cell and remember its contents - "move"   : move the previously selected marker to a new cell - "target" : mark a cell with `T` for targeting - "click"  : mark a cell with `C` for generic clicks - "drag_start"/"drag"/"drag_end" : preview a path while dragging - "clear"  : remove all ASCII entities
+			</description>
+		</method>
+		<method name="_render_drag_path">
+			<return type="void" />
+			<param index="0" name="end_pos" type="Vector2i" />
+			<description>
+				Generate a temporary ASCII path from `_drag_start` to `end_pos`. Existing path glyphs are cleared before the new path is stamped.
+			</description>
+		</method>
+		<method name="_bresenham">
+			<return type="Vector2i[]" />
+			<param index="0" name="a" type="Vector2i" />
+			<param index="1" name="b" type="Vector2i" />
+			<description>
+				Compute all integer grid points between two coordinates using Bresenham's line algorithm.
+			</description>
+		</method>
+		<method name="_get_top_ascii_entity">
+			<return type="Variant" />
+			<param index="0" name="p" type="Vector2i" />
+			<description>
+			</description>
+		</method>
+		<method name="run_tests">
+			<return type="Dictionary" />
+			<description>
+			</description>
+		</method>
+		<method name="_make_mark_shader">
+			<return type="Shader" />
+			<description>
+			</description>
+		</method>
+		<method name="_make_stroke_shader">
+			<return type="Shader" />
+			<description>
+			</description>
+		</method>
+		<method name="_make_hatch_shader">
+			<return type="Shader" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="enabled_layers" type="StringName[]" setter="" getter="" default="[...]">
+		</member>
+		<member name="layer_opacity_fill" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="layer_opacity_heat" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="layer_opacity_glyph" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="layer_opacity_labels" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="layer_opacity_outline" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="world_offset" type="Vector2" setter="" getter="" default="Vector2(0, 0)">
+		</member>
+		<member name="cell_size" type="Vector2" setter="" getter="" default="Vector2(48, 48)">
+		</member>
+		<member name="grid_size" type="Vector2i" setter="" getter="" default="Vector2i(16, 9)">
+		</member>
+		<member name="show_grid_lines" type="bool" setter="" getter="" default="true">
+		</member>
+		<member name="grid_line_thickness" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="grid_line_modulate" type="Color" setter="" getter="" default="Color(1, 1, 1, 0.15)">
+		</member>
+		<member name="enable_fill" type="bool" setter="" getter="" default="true">
+		</member>
+		<member name="enable_heat" type="bool" setter="" getter="" default="true">
+		</member>
+		<member name="enable_marks" type="bool" setter="" getter="" default="true">
+		</member>
+		<member name="enable_strokes" type="bool" setter="" getter="" default="true">
+		</member>
+		<member name="enable_hatch" type="bool" setter="" getter="" default="false">
+		</member>
+		<member name="opacity_fill" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="opacity_heat" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="opacity_marks" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="opacity_strokes" type="float" setter="" getter="" default="1.0">
+		</member>
+		<member name="opacity_hatch" type="float" setter="" getter="" default="0.4">
+		</member>
+		<member name="label_font" type="Font" setter="" getter="">
+		</member>
+		<member name="max_labels" type="int" setter="" getter="" default="256">
+		</member>
+		<member name="use_gpu_labels" type="bool" setter="" getter="" default="true">
+		</member>
+		<member name="_label_pool" type="Label[]" setter="" getter="" default="[]">
+		</member>
+		<member name="_label_in_use" type="int" setter="" getter="" default="0">
+		</member>
+		<member name="_gpu_batcher" type="GPULabelBatcher" setter="" getter="">
+		</member>
+		<member name="shader_mode" type="int" setter="" getter="" default="0">
+		</member>
+		<member name="_palette_overlay" type="ColorRect" setter="" getter="">
+		</member>
+		<member name="_palette_material" type="ShaderMaterial" setter="" getter="">
+		</member>
+		<member name="heat_gradient" type="Gradient" setter="" getter="" default="new()">
+		</member>
+		<member name="_fill_mm" type="Variant" setter="" getter="">
+		</member>
+		<member name="_fill_mmi" type="MultiMeshInstance2D" setter="" getter="">
+		</member>
+		<member name="_mark_mm" type="MultiMesh" setter="" getter="">
+		</member>
+		<member name="_mark_mmi" type="MultiMeshInstance2D" setter="" getter="">
+		</member>
+		<member name="_mark_mat" type="ShaderMaterial" setter="" getter="">
+		</member>
+		<member name="_stroke_mm" type="MultiMesh" setter="" getter="">
+		</member>
+		<member name="_stroke_mmi" type="MultiMeshInstance2D" setter="" getter="">
+		</member>
+		<member name="_stroke_mat" type="ShaderMaterial" setter="" getter="">
+		</member>
+		<member name="_hatch_mm" type="MultiMesh" setter="" getter="">
+		</member>
+		<member name="_hatch_mmi" type="MultiMeshInstance2D" setter="" getter="">
+		</member>
+		<member name="_hatch_mat" type="ShaderMaterial" setter="" getter="">
+		</member>
+		<member name="_w" type="int" setter="" getter="" default="0">
+		</member>
+		<member name="_h" type="int" setter="" getter="" default="0">
+		</member>
+		<member name="_tile_count" type="int" setter="" getter="" default="0">
+		</member>
+		<member name="_channels" type="Dictionary" setter="" getter="" default="{}">
+		</member>
+		<member name="_auto_minmax" type="Dictionary" setter="" getter="" default="{}">
+		</member>
+		<member name="_vis_mask" type="PackedFloat32Array" setter="" getter="" default="PackedFloat32Array()">
+		</member>
+		<member name="_time" type="float" setter="" getter="" default="0.0">
+		</member>
+		<member name="ascii_update_sec" type="float" setter="" getter="" default="0.5">
+		</member>
+		<member name="_ascii_accum" type="float" setter="" getter="" default="0.0">
+		</member>
+		<member name="ascii_debug" type="String" setter="" getter="" default="&quot;&quot;">
+		</member>
+		<member name="ascii_stream_enabled" type="bool" setter="" getter="" default="false">
+		</member>
+		<member name="ascii_use_color" type="bool" setter="" getter="" default="false">
+		</member>
+		<member name="ascii_actor_group" type="StringName" setter="" getter="" default="&amp;&quot;actors&quot;">
+		</member>
+		<member name="ascii_include_actors" type="bool" setter="" getter="" default="true">
+		</member>
+		<member name="_ascii_entities" type="Dictionary" setter="" getter="" default="{}">
+			maps `Vector2i` to `Array` of stacked entity dictionaries
+		</member>
+		<member name="_footprint_cache" type="Dictionary" setter="" getter="" default="{}">
+			actor RID -&gt; Array[Vector2i] relative tile offsets
+		</member>
+		<member name="_actor_cells" type="Dictionary" setter="" getter="" default="{}">
+			actor RID -&gt; Array[Vector2i] absolute cells for removal
+		</member>
+		<member name="_actor_states" type="Dictionary" setter="" getter="" default="{}">
+			actor RID -&gt; {"pos": Vector2i, "size": Vector2i}
+		</member>
+		<member name="_symbol_map" type="Dictionary" setter="" getter="" default="{}">
+			optional mapping from class/group/name to {char,color,priority,z_index}
+		</member>
+		<member name="input_pos" type="Vector2i" setter="" getter="" default="Vector2i(0, 0)">
+			Exposed input fields for grid coordinate and action.
+		</member>
+		<member name="input_action" type="String" setter="" getter="" default="&quot;&quot;">
+		</member>
+		<member name="_selected_pos" type="Vector2i" setter="" getter="" default="Vector2i(-1, -1)">
+		</member>
+		<member name="_selected_char" type="String" setter="" getter="" default="&quot;&quot;">
+		</member>
+		<member name="_selected_color" type="Color" setter="" getter="" default="Color(1, 1, 1, 1)">
+		</member>
+		<member name="_selected_priority" type="int" setter="" getter="" default="0">
+		</member>
+		<member name="_drag_start" type="Vector2i" setter="" getter="" default="Vector2i(-1, -1)">
+			starting tile of an active drag operation
+		</member>
+	</members>
+	<constants>
+		<constant name="GPULabelBatcher" value="&lt;Object&gt;">
+		</constant>
+		<constant name="DOT" value="0" enum="MarkType">
+		</constant>
+		<constant name="RING" value="1" enum="MarkType">
+		</constant>
+		<constant name="CROSS" value="2" enum="MarkType">
+		</constant>
+		<constant name="X" value="3" enum="MarkType">
+		</constant>
+		<constant name="TRIANGLE" value="4" enum="MarkType">
+		</constant>
+		<constant name="DIAMOND" value="5" enum="MarkType">
+		</constant>
+		<constant name="ARROW" value="6" enum="MarkType">
+		</constant>
+		<constant name="CHECKER" value="0" enum="Hatch">
+		</constant>
+		<constant name="DIAG" value="1" enum="Hatch">
+		</constant>
+		<constant name="STRIPES" value="2" enum="Hatch">
+		</constant>
+		<constant name="DRAG_PATH_ID" value="-1000">
+			identifier used for transient drag preview glyphs
+		</constant>
+	</constants>
+</class>

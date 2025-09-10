@@ -1,0 +1,9 @@
+[gd_resource type="TileSet" format=3]
+
+[resource]
+custom_data_layers/0/name = "Name"
+custom_data_layers/0/type = 4
+custom_data_layers/1/name = "Height"
+custom_data_layers/1/type = 2
+custom_data_layers/2/name = "Exclude"
+custom_data_layers/2/type = 4

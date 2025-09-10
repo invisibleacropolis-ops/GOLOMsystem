@@ -1,0 +1,111 @@
+<h1>ASCII Engine Manual</h1>
+<h2>Overview</h2>
+<p>The ASCII engine renders Golom's tactical grid directly in the terminal so the project can run without a graphical window. It wires <code>GridRealtimeRenderer</code> to the core runtime services and mirrors GUI behavior in a text-only environment. Frames are streamed at a configurable interval and the engine accepts commands over standard input.</p>
+<h2>Commands</h2>
+<h3>Game loop</h3>
+<p>When launched via <code>godot4 --headless --path .</code>, the engine loads the world and waits for single-character commands:</p>
+<ul>
+<li><code>w</code>, <code>a</code>, <code>s</code>, <code>d</code> – move the player actor when it is their turn.</li>
+<li><code>quit</code> – exit the simulation.</li>
+</ul>
+<h3>Console helper</h3>
+<p>Running <code>godot4 --headless --path . --script scripts/tools/ascii_console.gd</code> starts a lightweight console useful for tests:</p>
+<ul>
+<li><code>spawn NAME X Y</code> – create an actor at the given tile.</li>
+<li><code>move_actor NAME X Y</code> – reposition an existing actor.</li>
+<li><code>source FILE</code> – run commands from a file.</li>
+<li><code>list</code> – show all actors and their positions.</li>
+<li><code>select X Y</code> / <code>move X Y</code> / <code>target X Y</code> / <code>click X Y</code> – mark tiles through <code>update_input</code>.</li>
+<li><code>clear</code> – remove all markers.</li>
+<li><code>quit</code> – exit the console.</li>
+</ul>
+<h3>TCP server</h3>
+<p><code>godot4 --headless --path . --script scripts/tools/ascii_server.gd</code> runs a network server that mirrors the console interface on port <code>3456</code>. Connect using a tool like <code>nc localhost 3456</code> and you'll receive an ASCII grid every <code>0.5</code> seconds. Typed commands apply to the shared simulation just like the local console. Sending <code>quit</code> shuts down the server.</p>
+<h2>Reading Output</h2>
+<p>Each refresh prints an ASCII snapshot of the grid. Actors appear as <code>@</code>; background layers use <code>*</code> for glyphs, <code>#</code> for strokes, <code>+</code> for filled cells and <code>.</code> for empties. When <code>ascii_use_color</code> is enabled the renderer emits ANSI color codes so terminals can approximate tile colors. The most recent snapshot is also stored in <code>GridRealtimeRenderer.ascii_debug</code> for inspection.</p>
+<h2>Configuration</h2>
+<p>Key renderer options:</p>
+<ul>
+<li><code>ascii_update_sec</code> – seconds between snapshots (default <code>0.5</code>).</li>
+<li><code>ascii_use_color</code> – emit ANSI color codes.</li>
+<li><code>ascii_include_actors</code> – automatically insert actors from <code>ascii_actor_group</code> (default <code>"actors").</code></li>
+<li><code>set_ascii_entity(pos, symbol, color, priority)</code> – manually stamp symbols.</li>
+<li><code>update_input(pos, action)</code> – record selections or paths (<code>select</code>, <code>move</code>, <code>target</code>, <code>click</code>, <code>clear</code>).</li>
+</ul>
+<p>Console option:</p>
+<ul>
+<li><code>application/ascii_console_start_script</code> – path to a command file sourced on launch.</li>
+</ul>
+<h2>Example Session</h2>
+<pre><code>$ godot4 --headless --path .
+@..
+...
+...
+w
+@..
+...
+...
+quit
+</code></pre>
+<p>The first lines show the grid; entering <code>w</code> moved the player up and <code>quit</code> exited.</p>
+<p>Running the console helper:</p>
+<pre><code>$ godot4 --headless --path . --script scripts/tools/ascii_console.gd
+....
+....
+....
+spawn A 1 1
+.@..
+....
+....
+move_actor A 2 1
+..@.
+....
+....
+quit
+</code></pre>
+<h2>Debugging Tips</h2>
+<ul>
+<li>Run <code>godot4 --headless --path . --script scripts/test_runner.gd</code> before starting to verify modules pass self tests.</li>
+<li>Use <code>list</code> in the console to confirm actor positions.</li>
+<li>Enable <code>ascii_use_color</code> to highlight tile fills when debugging heatmaps.</li>
+<li>If input seems unresponsive, ensure the player's turn is active and that the terminal has focus.</li>
+</ul>
+<h2>Wishlist</h2>
+<ul>
+<li>Expose more renderer options from the command line.</li>
+<li>ASCII minimap and viewport scrolling.</li>
+<li>Record and replay sessions for regression tests.
+ASCII Engine – Live Control &amp; Gateway
+====================================</li>
+</ul>
+<h2>Overview</h2>
+<p>The ASCII engine mirrors the tactical grid at runtime. It can operate headlessly for CI and also attach to the live GUI game to act as a 1:1 controller/display.</p>
+<p>Key components
+- GridRealtimeRenderer (scripts/modules/GridRealtimeRenderer.gd)
+  - <code>get_ascii_frame()</code> returns the current snapshot
+  - <code>set_ascii_stream(enabled)</code> toggles periodic printing
+  - <code>set_ascii_rate(hz)</code> sets snapshot frequency (when streaming)
+  - <code>set_symbol_map(map)</code> maps classes/names → <code>{char,color,priority,z_index}</code>
+- ASCII Gateway (autoload): scripts/autoload/ascii_gateway.gd
+  - Exposes <code>snapshot()</code>, <code>apply_input(pos, action)</code>
+  - Actor ops: <code>spawn</code>, <code>move_actor</code>, <code>perform</code>, <code>remove</code>, <code>list</code>
+- Tools
+  - Console: scripts/tools/ascii_console.gd (interactive or <code>--pipe</code>, attaches by default)
+  - Server: scripts/tools/ascii_server.gd (TCP 3456, streams frames, accepts same commands)</p>
+<h2>Attach to live game</h2>
+<p>The gateway autoload (<code>AsciiGateway</code>) searches for an existing <code>RuntimeServices</code> and <code>GridRealtimeRenderer</code>. If absent, it creates them. Console and server attach automatically. Use <code>--no-attach</code> to run the console in self-contained mode.</p>
+<h2>Common commands</h2>
+<p>From console or server:
+- <code>spawn NAME X Y</code>
+- <code>move_actor NAME X Y</code>
+- <code>action NAME ID [X Y]</code>
+- <code>remove NAME</code>
+- <code>end_turn</code>
+- <code>list</code>
+- Renderer passthrough: <code>select X Y</code>, <code>move X Y</code>, <code>target X Y</code>, <code>click X Y</code>, <code>clear</code></p>
+<h2>Examples</h2>
+<ul>
+<li>Interactive console (attach): <code>pwsh -File scripts/ascii_play.ps1</code></li>
+<li>Piped: <code>PIPE=1 bash scripts/ascii_play.sh &lt; logs/ascii_commands.txt</code></li>
+<li>TCP server: <code>godot4 --headless --path . --script scripts/tools/ascii_server.gd</code></li>
+</ul>

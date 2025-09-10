@@ -1,0 +1,50 @@
+name: Godot CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: pre-commit/action@v3.0.0
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/godot4
+          key: ${{ runner.os }}-godot-4.4.1
+      - name: Setup Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/godotengine/godot-builds/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip
+          unzip -q Godot_v4.4.1-stable_linux.x86_64.zip
+          mv Godot_v4.4.1-stable_linux.x86_64 godot4
+          sudo mv godot4 /usr/local/bin/godot4
+          sudo chmod +x /usr/local/bin/godot4
+      - name: Run tests
+        run: |
+          godot4 --headless --path . --script scripts/test_runner.gd > test.log
+      - uses: actions/upload-artifact@v3
+        with:
+          name: godot-test-log
+          path: test.log
+      - name: Build docs
+        run: |
+          godot4 --headless --path . --doctool docs/api --gdscript-docs res://scripts/modules
+          git status --porcelain docs/api > docstatus.log
+      - name: Check docs clean
+        run: |
+          if [ -s docstatus.log ]; then echo "Docs are not clean. Please regenerate them and commit the changes."; cat docstatus.log; exit 1; fi
+      - uses: actions/upload-artifact@v3
+        with:
+          name: godot-docs
+          path: docs/api
+      - name: Check docs clean
+        run: |
+          if [ -s docstatus.log ]; then cat docstatus.log; exit 1; fi

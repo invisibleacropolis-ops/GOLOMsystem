@@ -1,0 +1,94 @@
+<h1>Loadouts Module Manual</h1>
+<p><code>loadouts.gd</code> defines the <code>Loadouts</code> module, which is responsible for determining and managing the set of abilities an actor can currently access. Abilities can originate from various sources, such as base grants, equipped items, current status effects, or class features. This module centralizes the logic for aggregating these abilities.</p>
+<h2>Responsibilities</h2>
+<ul>
+<li>Maintain separate internal dictionaries for abilities granted from different sources (base, equipment, status, class).</li>
+<li>Provide methods to grant abilities from these specific sources.</li>
+<li>Return a merged list of all currently available abilities for a given actor via <code>get_available()</code>.</li>
+</ul>
+<h2>Core Concepts and API Details</h2>
+<p>The <code>Loadouts</code> module acts as a flexible system for managing an actor's active ability set. By categorizing abilities by their source, it allows for clear logic regarding how abilities are gained and lost (e.g., an ability from an equipped item is lost when the item is unequipped).</p>
+<h3>Class: <code>Loadouts</code> (inherits from <code>Node</code>)</h3>
+<p>As a <code>Node</code>, <code>Loadouts</code> can be integrated into your game's scene tree, often as part of a <code>RuntimeServices</code> aggregation.</p>
+<h4>Members</h4>
+<ul>
+<li><strong><code>base_abilities</code></strong> (<code>Dictionary</code>, Default: <code>{}</code>): Stores abilities that an actor possesses inherently or permanently, not tied to temporary effects or equipment.</li>
+<li><strong><code>equipment_abilities</code></strong> (<code>Dictionary</code>, Default: <code>{}</code>): Stores abilities granted specifically by equipped items.</li>
+<li><strong><code>status_abilities</code></strong> (<code>Dictionary</code>, Default: <code>{}</code>): Stores abilities granted by active status effects (buffs/debuffs).</li>
+<li><strong><code>class_abilities</code></strong> (<code>Dictionary</code>, Default: <code>{}</code>): Stores abilities granted by an actor's class or profession.</li>
+<li><strong><code>event_log</code></strong> (<code>Array</code>, Default: <code>[]</code>): An internal log for recording events related to loadout changes, useful for debugging.</li>
+</ul>
+<h4>Methods</h4>
+<ul>
+<li><strong><code>log_event(t: String, actor: Object = null, pos: Variant = null, data: Variant = null) -&gt; void</code></strong>
+    Records structured events for debugging and tests. This is a general-purpose logging method used internally.</li>
+<li><strong><code>grant(actor: Object, ability_id: String) -&gt; void</code></strong>
+    Grants a base ability to the specified <code>actor</code>. This is typically for abilities an actor always has.<ul>
+<li><code>actor</code>: The actor receiving the ability.</li>
+<li><code>ability_id</code>: The unique string ID of the ability to grant.</li>
+</ul>
+</li>
+<li><strong><code>grant_from_equipment(actor: Object, ability_id: String) -&gt; void</code></strong>
+    Grants an ability to the <code>actor</code> specifically due to an equipped item.<ul>
+<li><code>actor</code>: The actor receiving the ability.</li>
+<li><code>ability_id</code>: The unique string ID of the ability from equipment.</li>
+</ul>
+</li>
+<li><strong><code>grant_from_status(actor: Object, ability_id: String) -&gt; void</code></strong>
+    Grants an ability to the <code>actor</code> due to an active status effect.<ul>
+<li><code>actor</code>: The actor receiving the ability.</li>
+<li><code>ability_id</code>: The unique string ID of the ability from a status.</li>
+</ul>
+</li>
+<li><strong><code>grant_from_class(actor: Object, ability_id: String) -&gt; void</code></strong>
+    Grants an ability to the <code>actor</code> based on its class or profession.<ul>
+<li><code>actor</code>: The actor receiving the ability.</li>
+<li><code>ability_id</code>: The unique string ID of the ability from a class.</li>
+</ul>
+</li>
+<li><strong><code>get_available(actor: Object) -&gt; String[]</code></strong>
+    Returns a merged <code>Array</code> of unique string IDs for all abilities currently available to the specified <code>actor</code> from all sources (base, equipment, status, class). This is the primary method for querying an actor's current ability set.<ul>
+<li><code>actor</code>: The actor whose available abilities are being queried.</li>
+<li><strong>Returns:</strong> An <code>Array</code> of <code>String</code>s, where each string is an ability ID.</li>
+</ul>
+</li>
+<li><strong><code>run_tests() -&gt; Dictionary</code></strong>
+    Executes internal self-tests for the <code>Loadouts</code> module, returning a dictionary of test results.</li>
+</ul>
+<h2>Usage</h2>
+<pre><code class="language-gdscript">var loadouts := Loadouts.new()
+var hero_actor = get_node(&quot;PlayerCharacter&quot;) # Assuming you have a player character node
+
+# Grant a base ability
+loadouts.grant(hero_actor, &quot;basic_attack&quot;)
+
+# Grant an ability from equipped gear
+loadouts.grant_from_equipment(hero_actor, &quot;shield_bash&quot;)
+
+# Grant an ability from a temporary buff status
+loadouts.grant_from_status(hero_actor, &quot;berserk_rage&quot;)
+
+# Grant an ability from the actor's class
+loadouts.grant_from_class(hero_actor, &quot;fireball&quot;)
+
+# Get all abilities currently available to the hero
+var available_abilities := loadouts.get_available(hero_actor)
+print(&quot;Hero's available abilities: &quot; + str(available_abilities))
+# Expected output (order may vary): [&quot;basic_attack&quot;, &quot;shield_bash&quot;, &quot;berserk_rage&quot;, &quot;fireball&quot;]
+
+# Example: If the &quot;berserk_rage&quot; status expires, you would remove its granted ability
+# loadouts.remove_from_status(hero_actor, &quot;berserk_rage&quot;) # (Assuming a remove method exists or you manage it by clearing the status)
+# available_abilities = loadouts.get_available(hero_actor)
+# print(&quot;Hero's abilities after status expires: &quot; + str(available_abilities))
+</code></pre>
+<h2>Integration Notes</h2>
+<ul>
+<li><strong>Categorized Ability Management:</strong> The <code>Loadouts</code> module's internal structure (separate dictionaries for <code>base_abilities</code>, <code>equipment_abilities</code>, etc.) is key. This allows for precise control over when abilities are gained or lost. For example, when an item is unequipped, you would call a corresponding "remove from equipment" method (if implemented) to ensure the ability is no longer available.</li>
+<li><strong>Pairing with <code>Abilities</code> Module:</strong> The <code>Loadouts</code> module works hand-in-hand with the <code>Abilities</code> module. <code>get_available()</code> provides the list of <em>what</em> abilities an actor has. This list then feeds into UI hotbars or AI planners, which then call <code>Abilities.can_use()</code> to check if an ability is currently usable (considering cooldowns, resource costs) and <code>Abilities.execute()</code> to perform the ability.</li>
+<li><strong>Debugging with <code>event_log</code>:</strong> The <code>event_log</code> array records grant events. Inspecting this log can be very helpful for debugging issues related to abilities not appearing or disappearing as expected.</li>
+</ul>
+<h2>Testing</h2>
+<p>Execute the module's self-test through the shared runner to verify its functionality:</p>
+<pre><code class="language-bash">godot4 --headless --path . --script scripts/test_runner.gd -- --module=loadouts
+</code></pre>
+<p>This test typically grants abilities from multiple sources (simulating equipment, statuses, etc.) and then ensures that <code>get_available()</code> correctly returns all granted abilities, confirming the module's ability aggregation logic.</p>

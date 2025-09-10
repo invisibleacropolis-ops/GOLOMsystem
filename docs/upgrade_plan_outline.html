@@ -1,0 +1,133 @@
+<h1>Future Upgrade Plan</h1>
+<p>This outline captures recommended enhancements for Golom's logic layer based on current code reviews and design goals. Items are grouped by area and intentionally verbose so future contributors can gauge scope and rationale, understanding how existing API elements lay the groundwork for these upgrades.</p>
+<h2>Core Infrastructure</h2>
+<h3>Robust <code>GridLogic</code> Implementation</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> The <code>GridLogic</code> module (<code>scripts/modules/grid_logic.gd</code>) is currently a placeholder. The plan is to evolve it into a central coordinator for high-level grid queries.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Delegation to <code>LogicGridMap</code>:</strong> The upgraded <code>GridLogic</code> will delegate core spatial operations (movement validation, Line of Sight (LOS), cover queries) to the <code>LogicGridMap</code> (<code>scripts/grid/grid_map.gd</code>). This ensures <code>LogicGridMap</code> remains the single source of truth for spatial data.</li>
+<li><strong>High-Level Helpers:</strong> It will expose simplified, high-level helper methods for AI and UI layers, such as <code>can_move(actor: Object, to: Vector2i) -&gt; bool</code> (which internally uses <code>LogicGridMap.find_path()</code> and <code>is_occupied()</code>) and <code>threatened_tiles(actor: Object) -&gt; Array[Vector2i]</code> (which might use <code>LogicGridMap.get_zone_of_control()</code>).</li>
+<li><strong>Testing:</strong> The module will include its own <code>run_tests()</code> method to cover edge cases like multi-tile actors and impassable terrain, ensuring its robustness.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/GridLogic.html">GridLogic API Documentation</a>, <a href="html/GridLogic.html">LogicGridMap API Documentation</a>, <a href="grid_logic_manual.md">Grid Logic Manual</a></li>
+</ul>
+<h3>Workspace Quality-of-Life</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> The <code>Workspace</code> (<code>scripts/core/workspace.gd</code>) is a developer tool for running tests. Enhancements aim to improve developer experience.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Persistence:</strong> Implement saving and loading of module selection and loop intervals to <code>user://</code> config files. This would involve using Godot's <code>ConfigFile</code> or JSON serialization to persist <code>Workspace</code>'s internal state (e.g., <code>selected_modules</code> array, <code>loop_interval</code> float).</li>
+<li><strong>"Run Selected" Option:</strong> Add a GUI option to <code>Workspace</code> to run only specific modules' tests. This would involve modifying <code>Workspace</code>'s UI and its interaction with <code>scripts/test_runner.gd</code> to pass a filtered list of modules.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="developer_overview.md">Developer Codebase Overview</a> (for <code>Workspace</code> context)</li>
+</ul>
+<h2>Spatial Systems</h2>
+<h3><code>LogicGridMap</code> Extensions</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> <code>LogicGridMap</code> (<code>scripts/grid/grid_map.gd</code>) is already a feature-rich spatial data container. These are plans to extend its capabilities.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Hex Grids/Variable Movement:</strong> This would involve significant internal changes to <code>LogicGridMap</code>'s coordinate system and neighbor-finding algorithms. The current <code>find_path()</code> and distance helpers are based on square grids, so new methods or configurable parameters would be needed.</li>
+<li><strong>Pathfinding Caching:</strong> Implement caching mechanisms for <code>find_path()</code> results. This would involve storing computed paths (e.g., in a <code>Dictionary</code> keyed by start/end points) to accelerate repeated queries, especially for AI.</li>
+<li><strong>Dynamic Terrain Changes:</strong> Add methods to <code>LogicGridMap</code> to dynamically alter tile properties (e.g., <code>set_height(pos, new_height)</code>, <code>toggle_los_blocker(pos, enable)</code>). These changes would need to trigger updates in pathfinding and LOS calculations. Corresponding events would be pushed to the <code>EventBus</code> (<code>EventBus.push()</code>) to log these changes.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/GridLogic.html">LogicGridMap API Documentation</a>, <a href="grid_map_manual.md">Grid Map Manual</a>, <a href="html/EventBus.html">EventBus API Documentation</a></li>
+</ul>
+<h3><code>GridInteractor</code> Polish</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> <code>GridInteractor</code> (<code>scripts/grid/grid_interactor.gd</code>) handles mouse input for grid interactions. Enhancements focus on improving user experience.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Camera Panning/Selection Cancellation:</strong> Implement right-click drag for camera panning (interacting with a <code>Camera2D</code> or <code>Camera3D</code> node) or to cancel active selections. This would involve adding new input handling logic within <code>GridInteractor</code> and potentially new signals (e.g., <code>pan_started</code>, <code>selection_canceled</code>).</li>
+<li><strong>Hover Previews:</strong> Leverage <code>GridRealtimeRenderer</code>'s capabilities (e.g., <code>set_cell_color()</code>, <code>set_mark()</code>, <code>stroke_outline_for()</code>) to provide visual feedback on hover, querying <code>LogicGridMap</code> for threatened zones (<code>LogicGridMap.get_zone_of_control()</code>) or reachable tiles (<code>LogicGridMap.find_path()</code>).</li>
+<li><strong>Keyboard Modifiers for Drag Selection:</strong> Extend <code>GridInteractor</code>'s input processing to interpret keyboard modifiers (e.g., Shift, Alt) for snapping drag selections to orthogonal lines or other patterns.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="grid_interactor_manual.md">Grid Interactor Manual</a>, <a href="html/GridRealtimeRenderer.html">GridRealtimeRenderer API Documentation</a>, <a href="html/GridLogic.html">LogicGridMap API Documentation</a></li>
+</ul>
+<h2>Timeline &amp; Combat</h2>
+<h3><code>TurnBasedGridTimespace</code> Depth</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> <code>TurnBasedGridTimespace</code> (<code>scripts/modules/turn_timespace.gd</code>) is the core turn manager. These are plans to add more sophisticated combat mechanics.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Explicit Reaction Windows:</strong> Introduce new states or phases within <code>TurnBasedGridTimespace</code>'s internal state machine to represent explicit reaction windows between action phases. This would involve new signals (e.g., <code>reaction_window_opened</code>) and methods to allow multiple watchers (e.g., <code>Reactions</code> module) to respond with priority rules.</li>
+<li><strong>Expanded Status Handling:</strong> Enhance the integration with <code>Statuses</code> (<code>scripts/modules/statuses.gd</code>). Implement callbacks or signals within <code>Statuses</code> (e.g., <code>status_applied</code>, <code>status_removed</code>) that automatically trigger updates to <code>Attributes</code> (<code>scripts/modules/attributes.gd</code>) when modifiers are applied or removed. (Note: <code>status_applied</code> and <code>status_removed</code> signals already exist and are used by <code>Statuses</code> to notify, so this is more about ensuring <code>Attributes</code> reacts to them).</li>
+<li><strong>Serialization and Replay:</strong> The <code>TurnBasedGridTimespace</code> already supports <code>serialize_event_log()</code> and <code>replay_event_log()</code>. The plan is to fully leverage these for deterministic unit tests and full game replays, ensuring all state changes are captured.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/TurnBasedGridTimespace.html">TurnBasedGridTimespace API Documentation</a>, <a href="turn_timespace_manual.md">Turn Timespace Manual</a>, <a href="html/Statuses.html">Statuses API Documentation</a>, <a href="statuses_manual.md">Statuses Manual</a>, <a href="html/Attributes.html">Attributes API Documentation</a>, <a href="attributes_manual.md">Attributes Manual</a>, <a href="html/Reactions.html">Reactions API Documentation</a>, <a href="reactions_manual.md">Reactions Manual</a>, <a href="html/EventBus.html">EventBus API Documentation</a></li>
+</ul>
+<h3>Action System</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> The game has a basic action system. The plan is to make it more flexible and data-driven.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Data-Driven Action Definitions:</strong> Move action definitions (e.g., "strike", "move") into external data files (JSON or Godot <code>Resource</code>s). This would involve <code>Abilities</code> (<code>scripts/modules/abilities.gd</code>) using <code>load_from_file()</code> or a similar mechanism to load these definitions at runtime.</li>
+<li><strong>Cooldown Tracking &amp; Resource Costs:</strong> <code>Abilities</code> already supports <code>tick_cooldowns()</code> and <code>can_use()</code> (which checks costs via <code>Attributes</code>). The upgrade would involve fully integrating these features into the data-driven action definitions, ensuring that all actions respect cooldowns and resource costs.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/Abilities.html">Abilities API Documentation</a>, <a href="abilities_manual.md">Abilities Manual</a>, <a href="html/Attributes.html">Attributes API Documentation</a></li>
+</ul>
+<h2>Actor Data &amp; Effects</h2>
+<h3><code>Attributes</code> and <code>Statuses</code> Integration</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> <code>Attributes</code> and <code>Statuses</code> are separate modules. The plan is to enhance their interaction for automatic modifier management.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Automatic Modifier Removal:</strong> Implement a <code>tick()</code> or observer pattern within <code>Statuses</code> (<code>scripts/modules/statuses.gd</code>) so that when a status expires, it automatically calls <code>Attributes.clear_modifiers()</code> to remove its associated numerical effects. (Note: <code>Statuses.tick()</code> already handles this, so this is about emphasizing its role).</li>
+<li><strong>Percentage-Based Modifiers &amp; Clamped Ranges:</strong> <code>Attributes</code> (<code>scripts/modules/attributes.gd</code>) already supports <code>add_modifier()</code> with a <code>perc</code> parameter for percentage-based modifiers and <code>set_range()</code> for clamped stat ranges. The plan is to fully utilize and expand these capabilities.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/Attributes.html">Attributes API Documentation</a>, <a href="attributes_manual.md">Attributes Manual</a>, <a href="html/Statuses.html">Statuses API Documentation</a>, <a href="statuses_manual.md">Statuses Manual</a></li>
+</ul>
+<h3><code>Loadouts</code>/<code>Abilities</code> Growth</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> <code>Loadouts</code> and <code>Abilities</code> manage what an actor can do. The plan is to make this more dynamic.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Comprehensive Ability Computation:</strong> <code>Loadouts</code> (<code>scripts/modules/loadouts.gd</code>) already has methods like <code>grant_from_equipment()</code>, <code>grant_from_status()</code>, and <code>grant_from_class()</code>. The upgrade involves fully leveraging these to compute an actor's available abilities based on all traits, equipment, and active statuses, and then using <code>Loadouts.get_available()</code> to query this merged list.</li>
+<li><strong>Ability Chaining/Combo Systems:</strong> <code>Abilities.execute()</code> already returns an <code>Array</code> of follow-up ability IDs. The plan is to build robust ability chaining or combo systems that utilize this return value to trigger subsequent abilities in an ordered effect list.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/Loadouts.html">Loadouts API Documentation</a>, <a href="loadouts_manual.md">Loadouts Manual</a>, <a href="html/Abilities.html">Abilities API Documentation</a>, <a href="abilities_manual.md">Abilities Manual</a></li>
+</ul>
+<h3><code>Reactions</code> Engine</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> The <code>Reactions</code> module (<code>scripts/modules/reactions.gd</code>) queues reactions. The plan is to refine its prioritization and AI integration.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Prioritized Resolution:</strong> Enhance <code>Reactions.resolve_next()</code> to prioritize queued reactions not just by insertion order, but by proximity to the event, initiative of the reacting actor, or other custom rules. This would involve modifying the internal sorting logic of the <code>queued</code> array.</li>
+<li><strong>AI Hooks:</strong> Offer explicit hooks for AI systems to inspect pending reactions (<code>Reactions.get_pending()</code>) before execution. This allows AI to make strategic decisions about whether to use a reaction, rather than just blindly executing it.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/Reactions.html">Reactions API Documentation</a>, <a href="reactions_manual.md">Reactions Manual</a></li>
+</ul>
+<h2>Visualization</h2>
+<h3><code>GridRealtimeRenderer</code> Features</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> <code>GridRealtimeRenderer</code> (<code>scripts/modules/GridRealtimeRenderer.gd</code>) is a high-performance visual overlay. The plan is to add more advanced rendering capabilities.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>GPU-Based Text Rendering:</strong> <code>GridRealtimeRenderer</code> already supports <code>use_gpu_labels</code>, <code>begin_labels()</code>, <code>push_label()</code>, and <code>end_labels()</code> for GPU-based text rendering, reducing draw calls. This feature is already implemented.</li>
+<li><strong>Shader Variations:</strong> Implement new shader variations (e.g., night vision, fog of war, colorblind-friendly palettes) and expose them via <code>set_shader_mode()</code>.</li>
+<li><strong>Benchmark Harness:</strong> Develop a benchmark harness to measure the performance of <code>GridRealtimeRenderer</code> under heavy updates (e.g., large grids, many dynamic overlays).</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="html/GridRealtimeRenderer.html">GridRealtimeRenderer API Documentation</a>, <a href="grid_realtime_renderer_manual.md">GridRealtimeRenderer Manual</a></li>
+</ul>
+<h3>Documentation and Tooling</h3>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> The project aims for comprehensive documentation.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Step-by-Step Tutorials:</strong> Create more tutorials demonstrating how to combine <code>GridRealtimeRenderer</code> with <code>TurnBasedGridTimespace</code> in gameplay scenes, similar to the existing <code>renderer_turn_timespace_tutorial.md</code>.</li>
+<li><strong>API Reference Docs:</strong> The project already generates API reference documentation using <code>godot --doctool</code> for all modules, which are then converted to HTML. The plan is to ensure this process is robust and covers all new APIs.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="developer_overview.md">Developer Codebase Overview</a>, <a href="headless_tooling.md">Headless Tooling &amp; Runner Scripts</a></li>
+</ul>
+<h2>Testing &amp; CI</h2>
+<ul>
+<li><strong>Current Status &amp; Rationale:</strong> The project has a <code>test_runner.gd</code> for headless testing. The plan is to automate and expand testing in CI.</li>
+<li><strong>API Integration:</strong><ul>
+<li><strong>Automated CI Runs:</strong> Automate <code>godot4 --headless</code> test runs in CI pipelines (e.g., GitHub Actions) with log artifact uploads. This leverages the existing headless capabilities of Godot and the <code>test_runner.gd</code> script.</li>
+<li><strong>Regression Tests:</strong> Add more regression tests for pathfinding (<code>LogicGridMap.find_path()</code>), LOS (<code>LogicGridMap.has_line_of_sight()</code>), and Zone of Control (ZOC) calculations (<code>LogicGridMap.get_zone_of_control()</code>) using deterministic seed scenarios.</li>
+<li><strong>Documentation Build Validation:</strong> Implement CI checks to validate documentation build steps, ensuring that updates to <code>docs/</code> do not drift from code behavior. This would involve running the <code>doc_regen</code> scripts and potentially comparing generated output.</li>
+</ul>
+</li>
+<li><strong>Further Reading:</strong> <a href="headless_tooling.md">Headless Tooling &amp; Runner Scripts</a></li>
+</ul>
