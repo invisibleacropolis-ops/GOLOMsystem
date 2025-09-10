@@ -1,9 +1,0 @@
-{
-  "default": {
-    "default": { "char": ".", "color": [1,1,1,1], "priority": 0, "z_index": 0 },
-    "BaseActor": { "char": "@", "color": [1,1,1,1], "priority": 10, "z_index": 0 },
-    "enemy": { "char": "E", "color": [1,0.3,0.3,1], "priority": 12, "z_index": 0 },
-    "npc": { "char": "N", "color": [0.3,0.8,1,1], "priority": 11, "z_index": 0 }
-  }
-}
-

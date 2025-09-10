@@ -1,8 +1,0 @@
-ERROR: Condition "name.is_empty()" is true.
-   at: set_name (scene/main/node.cpp:1396)
-ERROR: Condition "name.is_empty()" is true.
-   at: set_name (scene/main/node.cpp:1396)
-WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
-   at: cleanup (core/object/object.cpp:2378)
-ERROR: 7 resources still in use at exit (run with --verbose for details).
-   at: clear (core/io/resource.cpp:614)

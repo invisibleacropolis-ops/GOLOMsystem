@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://c1i56m1j3vrw2"]
-
-[ext_resource type="Script" uid="uid://c5si7kc6n15vw" path="res://scenes/test_grid.gd" id="1_l4bel"]
-
-[node name="TestGrid" type="Node"]
-script = ExtResource("1_l4bel")
