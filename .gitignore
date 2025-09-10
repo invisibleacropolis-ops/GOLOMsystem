@@ -2,6 +2,7 @@
 .godot/
 /android/
 Godot_v4.4.1-stable_linux.x86_64.zip
+tools/.godot-bin/Godot_v4.4.1-stable_linux.x86_64
 godot4
 *.import
 *.uid
