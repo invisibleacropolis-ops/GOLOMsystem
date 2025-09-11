@@ -23,6 +23,7 @@ var _move_aggr: Dictionary = {}                ## rid -> {actor, start, last, st
 var _last_action: Dictionary = {}              ## rid -> {id: String, payload}
 var _action_max_damage: Dictionary = {}        ## id -> int
 var _humanizer
+const StylePalette = preload("res://scripts/ui/style_palette.gd")
 var _palette: StylePalette
 var _rendered_lines: Array[String] = []
 var _search_query := ""
@@ -208,20 +209,20 @@ func _faction_color(fac: String) -> String:
 func _fmt_item(name: String) -> String:
     if name == null or name == "":
         return ""
-    var c := _palette.get_color("item", "#ffbf00")
+    var c: String = _palette.get_color("item", "#ffbf00")
     return "[url=item:%s][color=%s][i]%s[/i][/color][/url]" % [name, c, name]
 
 func _fmt_ability(id: String) -> String:
     if id == null or id == "":
         return ""
     var label := id.capitalize().replace("_", " ")
-    var c := _palette.get_color("ability", "#c8a2ff")
+    var c: String = _palette.get_color("ability", "#c8a2ff")
     return "[url=ability:%s][color=%s][b]%s[/b][/color][/url]" % [id, c, label]
 
 func _fmt_status(name: String) -> String:
     if name == null or name == "":
         return ""
-    var c := _palette.get_color("status", "#ffd166")
+    var c: String = _palette.get_color("status", "#ffd166")
     return "[url=status:%s][color=%s][i]%s[/i][/color][/url]" % [name, c, name]
 
 func _section(text: String, color: Color) -> String:
