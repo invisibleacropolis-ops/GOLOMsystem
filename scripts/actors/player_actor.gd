@@ -6,6 +6,7 @@ class_name PlayerActor
 
 var runtime
 var weapon_name: String = "Sword"
+var mesh_kind: String = "sphere" ## visual proxy shape
 
 func _unhandled_input(event: InputEvent) -> void:
     if runtime == null:

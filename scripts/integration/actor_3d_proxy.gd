@@ -17,17 +17,28 @@ func _build_mesh(color: Color) -> void:
         _mesh.queue_free()
     _mesh = MeshInstance3D.new()
     _mesh.name = "ActorMesh"
-    var quad := QuadMesh.new()
-    quad.size = Vector2(0.8, 0.8)
+    # Choose a primitive mesh based on the actor's requested shape.
+    var shape := "sphere"
+    if actor and actor.has_method("get"):
+        shape = String(actor.get("mesh_kind", "sphere"))
+    var prim: PrimitiveMesh
+    match shape:
+        "cube":
+            var box := BoxMesh.new()
+            box.size = Vector3.ONE * 0.8
+            prim = box
+            _mesh.position.y = 0.4
+        _:
+            var sphere := SphereMesh.new()
+            sphere.radius = 0.4
+            prim = sphere
+            _mesh.position.y = 0.4
     var mat := StandardMaterial3D.new()
     mat.albedo_color = color
     mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
     mat.billboard_mode = BaseMaterial3D.BILLBOARD_DISABLED
-    _mesh.mesh = quad
+    _mesh.mesh = prim
     _mesh.material_override = mat
-    # lift the quad slightly above the ground and rotate upright
-    _mesh.rotation_degrees.x = -90
-    _mesh.position.y = 0.5
     add_child(_mesh)
 
 func update_from_actor() -> void:

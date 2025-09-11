@@ -14,6 +14,7 @@ var grid_pos: Vector2i = Vector2i.ZERO  ## origin tile on the grid
 var facing: Vector2i = Vector2i.RIGHT  ## current facing direction
 var size: Vector2i = Vector2i.ONE  ## footprint in tiles
 var faction: String = ""  ## allegiance identifier, e.g. "player" or "enemy"
+var mesh_kind: String = "sphere"  ## procedural 3D proxy shape (e.g. "sphere", "cube")
 
 
 ## Initialize with optional name and grid placement.
