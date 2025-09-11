@@ -12,14 +12,14 @@ func _ready() -> void:
 func _resize_square() -> void:
     if _frame == null:
         return
-    var pad_left := 8.0
-    var pad_right := 8.0
-    var available_w := max(0.0, size.x - (pad_left + pad_right))
-    var target := available_w
+    var pad_left: float = 8.0
+    var pad_right: float = 8.0
+    var available_w: float = max(0.0, size.x - (pad_left + pad_right))
+    var target: float = available_w
     # Cap by available height in this panel
-    var pad_top := 8.0
-    var pad_bottom := 8.0
-    var available_h := max(0.0, size.y - (pad_top + pad_bottom))
+    var pad_top: float = 8.0
+    var pad_bottom: float = 8.0
+    var available_h: float = max(0.0, size.y - (pad_top + pad_bottom))
     if target > available_h:
         target = available_h
     # Enforce exact square by setting minimum and removing expansion flags.

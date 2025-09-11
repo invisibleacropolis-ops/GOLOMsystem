@@ -5,6 +5,8 @@ class_name EnemyActor
 ## On its turn the enemy will attack if a target is within `attack_range`.
 ## Otherwise it will pathfind toward the closest player before ending its turn.
 ## The actor always yields the initiative once an action has been taken.
+const PlayerActor = preload("res://scripts/actors/player_actor.gd")
+
 var runtime
 var attack_range: int = 1 ## Maximum Manhattan distance for attacks.
 var weapon_name: String = "Rusty Axe"

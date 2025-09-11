@@ -150,3 +150,38 @@ func _lock_heights() -> void:
     if has_node("Root/LeftPane/WorldOverlay/Buttons/ToggleCamera"):
         $Root/LeftPane/WorldOverlay/Buttons/ToggleCamera.pressed.connect(_toggle_camera_controls)
     _sync_camera_buttons()
+
+func _on_event(evt: Dictionary) -> void:
+    if event_log and event_log.has_method("append_entry"):
+        event_log.append_entry(evt)
+
+func _toggle_debug_overlays() -> void:
+    var slice_dbg = get_tree().root.get_node_or_null("/root/VerticalSlice/SliceDebug")
+    if slice_dbg:
+        slice_dbg.visible = not slice_dbg.visible
+    var err = get_tree().root.get_node_or_null("/root/VerticalSlice/ErrorOverlay")
+    if err:
+        err.visible = not err.visible
+
+func _toggle_camera_controls() -> void:
+    var cam = get_tree().root.get_node_or_null("/root/VerticalSlice/World3D/Camera3D")
+    if cam and cam.has_variable("controls_enabled"):
+        cam.controls_enabled = not cam.controls_enabled
+    _sync_camera_buttons()
+
+func _sync_camera_buttons() -> void:
+    var cam = get_tree().root.get_node_or_null("/root/VerticalSlice/World3D/Camera3D")
+    var enabled := true
+    if cam and cam.has_variable("controls_enabled"):
+        enabled = cam.controls_enabled
+    if has_node("Root/RightPane/Utility/UtilityVBox/Buttons/ToggleCamera"):
+        $Root/RightPane/Utility/UtilityVBox/Buttons/ToggleCamera.button_pressed = enabled
+    if has_node("Root/LeftPane/WorldOverlay/Buttons/ToggleCamera"):
+        $Root/LeftPane/WorldOverlay/Buttons/ToggleCamera.button_pressed = enabled
+
+func _dbg(msg: String) -> void:
+    var dbg = get_tree().get_root().get_node_or_null("/root/WorkspaceDebugger")
+    if dbg and dbg.has_method("log_info"):
+        dbg.log_info("[MainGUI] %s" % msg)
+    else:
+        print("[MainGUI] %s" % msg)

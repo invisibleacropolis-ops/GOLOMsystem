@@ -1,4 +1,4 @@
-extends HumanizerProvider
+extends "res://scripts/humanize/providers/base_provider.gd"
 
 ## LLM stub provider: logs driver prompts, returns simple text.
 ## Replace this with a real local model integration later.

@@ -1,4 +1,4 @@
-extends HumanizerProvider
+extends "res://scripts/humanize/providers/base_provider.gd"
 
 ## Rule-based provider for deterministic humanized lines.
 ## Future: parameterize tone/style and support localization.
