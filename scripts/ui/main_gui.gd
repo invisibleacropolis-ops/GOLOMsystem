@@ -14,6 +14,12 @@ class_name MainGUI
 @onready var left_pane: Control = $Root/LeftPane/EventLog/Body/MsgPane
 @onready var inspector: Panel = $Root/RightPane/Inspector
 
+func _has_property(obj: Object, prop: String) -> bool:
+    for p in obj.get_property_list():
+        if p.name == prop:
+            return true
+    return false
+
 func _ready() -> void:
     if services == null:
         services = get_tree().get_root().get_node_or_null("/root/VerticalSlice/Runtime")
@@ -47,9 +53,7 @@ func _ready() -> void:
     # Inspector close wiring
     if inspector and inspector.has_node("VBox/Close"):
         inspector.get_node("VBox/Close").connect("pressed", func(): inspector.visible = false)
-    # Toggle debug overlays (SliceDebug + ErrorOverlay) via UI button
-    if has_node("Root/RightPane/Utility/UtilityVBox/Buttons/ToggleDebug"):
-        $Root/RightPane/Utility/UtilityVBox/Buttons/ToggleDebug.pressed.connect(_toggle_debug_overlays)
+    # Toggle debug overlays handled via scene connection
 
 func _on_msg_meta_clicked(meta):
     # Stub actions: route to help or trigger simple behaviors.
@@ -165,14 +169,14 @@ func _toggle_debug_overlays() -> void:
 
 func _toggle_camera_controls() -> void:
     var cam = get_tree().root.get_node_or_null("/root/VerticalSlice/World3D/Camera3D")
-    if cam and cam.has_variable("controls_enabled"):
+    if cam and _has_property(cam, "controls_enabled"):
         cam.controls_enabled = not cam.controls_enabled
     _sync_camera_buttons()
 
 func _sync_camera_buttons() -> void:
     var cam = get_tree().root.get_node_or_null("/root/VerticalSlice/World3D/Camera3D")
     var enabled := true
-    if cam and cam.has_variable("controls_enabled"):
+    if cam and _has_property(cam, "controls_enabled"):
         enabled = cam.controls_enabled
     if has_node("Root/RightPane/Utility/UtilityVBox/Buttons/ToggleCamera"):
         $Root/RightPane/Utility/UtilityVBox/Buttons/ToggleCamera.button_pressed = enabled
