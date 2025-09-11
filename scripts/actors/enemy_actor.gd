@@ -10,6 +10,7 @@ const PlayerActor = preload("res://scripts/actors/player_actor.gd")
 var runtime
 var attack_range: int = 1 ## Maximum Manhattan distance for attacks.
 var weapon_name: String = "Rusty Axe"
+var mesh_kind: String = "cube" ## visual proxy shape
 
 func _ready() -> void:
     if runtime:
