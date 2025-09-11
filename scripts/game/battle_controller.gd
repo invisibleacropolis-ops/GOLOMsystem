@@ -47,8 +47,12 @@ func _assert_wiring() -> void:
 func _setup_grid() -> void:
     # Build a 32x32 world using MapGenerator -> TileToGridmap addon.
     var MapGen = preload("res://scripts/modules/map_generator.gd")
-    var tileset: TileSet = preload("res://addons/tile_to_gridmap/example/tilemaps/example_terrain.tres")
-    var meshlib: MeshLibrary = preload("res://addons/tile_to_gridmap/example/gridmaps/scenes/library/dg_mesh_lib.tres")
+    var tileset: TileSet = null
+    if ResourceLoader.exists("res://addons/tile_to_gridmap/example/tilemaps/example_terrain.tres"):
+        tileset = load("res://addons/tile_to_gridmap/example/tilemaps/example_terrain.tres")
+    var meshlib: MeshLibrary = null
+    if ResourceLoader.exists("res://addons/tile_to_gridmap/example/gridmaps/scenes/library/dg_mesh_lib.tres"):
+        meshlib = load("res://addons/tile_to_gridmap/example/gridmaps/scenes/library/dg_mesh_lib.tres")
 
     # Map LogicGridMap terrain tags -> TileSet atlas coordinates used by T2GTerrainLayer
     var atlas := {

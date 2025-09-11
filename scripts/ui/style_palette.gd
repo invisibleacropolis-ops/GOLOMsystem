@@ -14,8 +14,8 @@ var colors := {
     "section": "#e0e0ff"
 }
 
-static func load_palette(path: String = "res://data/style_palette.json") -> StylePalette:
-    var p = StylePalette.new()
+static func load_palette(path: String = "res://data/style_palette.json"):
+    var p = preload("res://scripts/ui/style_palette.gd").new()
     if FileAccess.file_exists(path):
         var f = FileAccess.open(path, FileAccess.READ)
         if f:
