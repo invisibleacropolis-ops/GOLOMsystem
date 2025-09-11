@@ -86,7 +86,7 @@ offset_top = 8.0
 text = "Main Event Log"
 theme_override_fonts/font = SubResource(99)
 
-[node name="Body" type="HBoxContainer" parent="Root/LeftPane/EventLog/Body"]
+[node name="Body" type="HBoxContainer" parent="Root/LeftPane/EventLog"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -223,7 +223,7 @@ alignment = 2
 [node name="MiniTitle" type="Label" parent="Root/RightPane/MinimapUtil/MiniVBox"]
 text = "minimapUtil (placeholder)"
 
-[node="MiniFrame" type="Panel" parent="Root/RightPane/MinimapUtil/MiniVBox"]
+[node name="MiniFrame" type="Panel" parent="Root/RightPane/MinimapUtil/MiniVBox"]
 custom_minimum_size = Vector2(0, 120)
 theme_override_styles/panel = SubResource(202)
 size_flags_horizontal = 0
