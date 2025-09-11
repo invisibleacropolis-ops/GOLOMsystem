@@ -223,7 +223,7 @@ alignment = 2
 [node name="MiniTitle" type="Label" parent="Root/RightPane/MinimapUtil/MiniVBox"]
 text = "minimapUtil (placeholder)"
 
-[node="MiniFrame" type="Panel" parent="Root/RightPane/MinimapUtil/MiniVBox"]
+[node name="MiniFrame" type="Panel" parent="Root/RightPane/MinimapUtil/MiniVBox"]
 custom_minimum_size = Vector2(0, 120)
 theme_override_styles/panel = SubResource(202)
 size_flags_horizontal = 0
