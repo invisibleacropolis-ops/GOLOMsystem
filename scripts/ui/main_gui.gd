@@ -13,6 +13,7 @@ class_name MainGUI
 @onready var right_scroll: ScrollContainer = $Root/LeftPane/EventLog/Body/Scroll
 @onready var left_pane: Control = $Root/LeftPane/EventLog/Body/MsgPane
 @onready var inspector: Panel = $Root/RightPane/Inspector
+@onready var log_menu: MenuButton = $Root/RightPane/OptionsMenu ## Dropdown for verbosity settings
 
 func _has_property(obj: Object, prop: String) -> bool:
     for p in obj.get_property_list():
@@ -154,6 +155,7 @@ func _lock_heights() -> void:
     if has_node("Root/LeftPane/WorldOverlay/Buttons/ToggleCamera"):
         $Root/LeftPane/WorldOverlay/Buttons/ToggleCamera.pressed.connect(_toggle_camera_controls)
     _sync_camera_buttons()
+    _init_log_menu()
 
 func _on_event(evt: Dictionary) -> void:
     if event_log and event_log.has_method("append_entry"):
@@ -182,6 +184,30 @@ func _sync_camera_buttons() -> void:
         $Root/RightPane/Utility/UtilityVBox/Buttons/ToggleCamera.button_pressed = enabled
     if has_node("Root/LeftPane/WorldOverlay/Buttons/ToggleCamera"):
         $Root/LeftPane/WorldOverlay/Buttons/ToggleCamera.button_pressed = enabled
+
+func _init_log_menu() -> void:
+    ## Populate dropdown with verbosity controls.
+    if log_menu == null:
+        return
+    var popup := log_menu.get_popup()
+    popup.clear()
+    popup.add_item("GUI: Minimal", 0)
+    popup.add_item("GUI: Normal", 1)
+    popup.add_item("GUI: Verbose", 2)
+    popup.add_separator()
+    popup.add_item("File: Minimal", 10)
+    popup.add_item("File: Normal", 11)
+    popup.add_item("File: Verbose", 12)
+    popup.id_pressed.connect(_on_log_menu_id)
+
+func _on_log_menu_id(id: int) -> void:
+    match id:
+        0: LogConfig.set_gui_level(LogConfig.Verbosity.MINIMAL)
+        1: LogConfig.set_gui_level(LogConfig.Verbosity.NORMAL)
+        2: LogConfig.set_gui_level(LogConfig.Verbosity.VERBOSE)
+        10: LogConfig.set_file_level(LogConfig.Verbosity.MINIMAL)
+        11: LogConfig.set_file_level(LogConfig.Verbosity.NORMAL)
+        12: LogConfig.set_file_level(LogConfig.Verbosity.VERBOSE)
 
 func _dbg(msg: String) -> void:
     var dbg = get_tree().get_root().get_node_or_null("/root/WorkspaceDebugger")

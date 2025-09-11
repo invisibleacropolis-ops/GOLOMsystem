@@ -24,6 +24,7 @@ AsciiStreamServer="*res://scripts/autoload/ascii_stream_server.gd"
 ErrorHub="*res://scripts/autoload/error_hub.gd"
 ThemeBootstrap="*res://scripts/autoload/theme_bootstrap.gd"
 EventTapLogger="*res://scripts/autoload/event_tap_logger.gd"
+LogConfig="*res://scripts/autoload/log_config.gd"
 
 [display]
 

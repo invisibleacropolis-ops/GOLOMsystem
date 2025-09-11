@@ -28,6 +28,8 @@ var _palette: StylePalette
 var _rendered_lines: Array[String] = []
 var _search_query := ""
 var _search_line_idx := -1
+var _log_config: Node   ## Global verbosity config (autoload)
+var _gui_level: int = 1 ## Current GUI verbosity level
 
 const MOVE_FLUSH_MS := 280  ## delay to aggregate bursty move steps into one line
 
@@ -54,6 +56,10 @@ func _ready() -> void:
     _apply_terminal_font()
     _apply_viewport_height()
     _palette = StylePalette.load_palette()
+    _log_config = get_tree().get_root().get_node_or_null("/root/LogConfig")
+    if _log_config:
+        _gui_level = _log_config.gui_level
+        _log_config.gui_level_changed.connect(func(level): _gui_level = level; _rebuild())
 
 func _notification(what: int) -> void:
     if what == NOTIFICATION_THEME_CHANGED:
@@ -78,8 +84,9 @@ func append_entry(evt: Dictionary) -> void:
         if id == "move":
             _accumulate_move(evt)
             return  # defer printing for humanized aggregation
-    if _passes_filter(evt):
-        _append_formatted(evt)
+    if _log_config == null or _log_config.event_level(evt) <= _gui_level:
+        if _passes_filter(evt):
+            _append_formatted(evt)
 
 ## Replace the allowed event types. Empty == show all.
 func set_type_filter(types: Array) -> void:
@@ -398,7 +405,7 @@ func _rebuild() -> void:
     text = ""
     _rendered_lines.clear()
     for e in entries:
-        if _passes_filter(e):
+        if (_log_config == null or _log_config.event_level(e) <= _gui_level) and _passes_filter(e):
             var line = _compute_line(e)
             _append_line(line)
 
