@@ -64,7 +64,7 @@ func _run() -> void:
             if hub:
                 hub.call_deferred("warn", "test_runner", "%s: no tests" % name, {})
         # Ensure we clean up the module instance and release the script resource
-        if mod is Node:
+        if not (mod is RefCounted):
             mod.free()
         mod = null
         script = null

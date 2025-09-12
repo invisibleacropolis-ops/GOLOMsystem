@@ -1,7 +1,11 @@
 extends Node
 class_name Reactions
 
-const Logging = preload("res://scripts/core/logging.gd")
+var Logging = ResourceLoader.load(
+    "res://scripts/core/logging.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
 
 ## Interrupt engine that queues reaction abilities with priority
 ## rather than simple FIFO ordering. Provides inspection hooks for AI.
@@ -18,6 +22,9 @@ func trigger(actor: Object, data, priority: int = 0) -> void:
     queued.append({"actor": actor, "data": data, "priority": priority})
     queued.sort_custom(func(a, b): return a["priority"] > b["priority"])
     emit_signal("reaction_queued", queued[0])
+
+func _exit_tree() -> void:
+    Logging = null
     log_event("reaction_triggered", actor, null, {"data": data, "p": priority})
 
 func resolve_next():

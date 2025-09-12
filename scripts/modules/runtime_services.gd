@@ -27,14 +27,46 @@ var event_bus
 
 func _init() -> void:
     # Load scripts at runtime to avoid static preload failures.
-    _LogicGridMapScript = load("res://scripts/grid/grid_map.gd")
-    _TurnTimespaceScript = load("res://scripts/modules/turn_timespace.gd")
-    _AttributesScript = load("res://scripts/modules/attributes.gd")
-    _StatusesScript = load("res://scripts/modules/statuses.gd")
-    _AbilitiesScript = load("res://scripts/modules/abilities.gd")
-    _LoadoutsScript = load("res://scripts/modules/loadouts.gd")
-    _ReactionsScript = load("res://scripts/modules/reactions.gd")
-    _EventBusScript = load("res://scripts/modules/event_bus.gd")
+    _LogicGridMapScript = ResourceLoader.load(
+        "res://scripts/grid/grid_map.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _TurnTimespaceScript = ResourceLoader.load(
+        "res://scripts/modules/turn_timespace.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _AttributesScript = ResourceLoader.load(
+        "res://scripts/modules/attributes.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _StatusesScript = ResourceLoader.load(
+        "res://scripts/modules/statuses.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _AbilitiesScript = ResourceLoader.load(
+        "res://scripts/modules/abilities.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _LoadoutsScript = ResourceLoader.load(
+        "res://scripts/modules/loadouts.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _ReactionsScript = ResourceLoader.load(
+        "res://scripts/modules/reactions.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _EventBusScript = ResourceLoader.load(
+        "res://scripts/modules/event_bus.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
 
     grid_map = _LogicGridMapScript.new()
     timespace = _TurnTimespaceScript.new(); timespace.name = "TurnTimespace"
@@ -57,6 +89,7 @@ func _ready() -> void:
     if loadouts: loadouts.name = "Loadouts"
     if reactions: reactions.name = "Reactions"
     if event_bus: event_bus.name = "EventBus"
+    add_child(grid_map)
     add_child(timespace)
     add_child(attributes)
     add_child(statuses)
@@ -147,10 +180,48 @@ func run_tests() -> Dictionary:
     for m in modules:
         m.free()
     timespace.free()
+    if grid_map:
+        grid_map.free()
     grid_map = null
+    p.free()
+    e.free()
+    gm_vs.free()
+    ts_vs.free()
+    attributes = null
+    statuses = null
+    abilities = null
+    loadouts = null
+    reactions = null
+    event_bus = null
+    _LogicGridMapScript = null
+    _TurnTimespaceScript = null
+    _AttributesScript = null
+    _StatusesScript = null
+    _AbilitiesScript = null
+    _LoadoutsScript = null
+    _ReactionsScript = null
+    _EventBusScript = null
 
     return {
         "failed": failures,
         "total": total,
         "log": "\n".join(log),
     }
+
+func _exit_tree() -> void:
+    grid_map = null
+    timespace = null
+    attributes = null
+    statuses = null
+    abilities = null
+    loadouts = null
+    reactions = null
+    event_bus = null
+    _LogicGridMapScript = null
+    _TurnTimespaceScript = null
+    _AttributesScript = null
+    _StatusesScript = null
+    _AbilitiesScript = null
+    _LoadoutsScript = null
+    _ReactionsScript = null
+    _EventBusScript = null
