@@ -93,6 +93,7 @@ func _run() -> void:
                 n.cleanup()
             n.queue_free()
 
-    # Allow one frame so queued frees execute before exiting.
+    # Allow a couple of frames so queued frees execute before exiting.
+    await process_frame
     await process_frame
     quit(failed)
