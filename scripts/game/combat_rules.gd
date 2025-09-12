@@ -36,7 +36,7 @@ func run_tests() -> Dictionary:
     var failed := 0
     var total := 0
     var Grid = preload("res://scripts/grid/grid_map.gd")
-    var grid := Grid.new()
+    var grid: Node = Grid.new()
     grid.width = 2
     grid.height = 1
     grid.set_cover(Vector2i(1, 0), "half")

@@ -122,7 +122,7 @@ func _preview_path_to(tile: Vector2i) -> void:
     for i in range(1, path.size()):
         var step: Vector2i = path[i]
         var prev: Vector2i = path[i - 1]
-        var rot := (step - prev).angle()
+        var rot: float = Vector2(step - prev).angle()
         if _vis.has_method("set_mark"):
             _vis.set_mark(step, 0, path_mark_color, 1.0, rot)
         _path_mark_tiles.push_back(step)
