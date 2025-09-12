@@ -7,6 +7,7 @@
 -   Maintain separate internal dictionaries for abilities granted from different sources (base, equipment, status, class).
 -   Provide methods to grant abilities from these specific sources.
 -   Return a merged list of all currently available abilities for a given actor via `get_available()`.
+-   Offer cleanup helpers to prevent stale actor references and resource leaks.
 
 ## Core Concepts and API Details
 
@@ -23,6 +24,8 @@ As a `Node`, `Loadouts` can be integrated into your game's scene tree, often as 
 *   **`status_abilities`** (`Dictionary`, Default: `{}`): Stores abilities granted by active status effects (buffs/debuffs).
 *   **`class_abilities`** (`Dictionary`, Default: `{}`): Stores abilities granted by an actor's class or profession.
 *   **`event_log`** (`Array`, Default: `[]`): An internal log for recording events related to loadout changes, useful for debugging.
+
+The module automatically prunes entries associated with freed actors whenever `get_available()` is called.
 
 #### Methods
 
@@ -48,6 +51,10 @@ As a `Node`, `Loadouts` can be integrated into your game's scene tree, often as 
     Returns a merged `Array` of unique string IDs for all abilities currently available to the specified `actor` from all sources (base, equipment, status, class). This is the primary method for querying an actor's current ability set.
     *   `actor`: The actor whose available abilities are being queried.
     *   **Returns:** An `Array` of `String`s, where each string is an ability ID.
+*   **`cleanup_actor(actor: Object) -> void`**
+    Removes any ability references for the specified `actor`. Call this when an actor leaves the game to avoid holding onto stale references.
+*   **`clear() -> void`**
+    Wipes all internal dictionaries and the event log. Useful for tests and verifying that no residual data remains.
 *   **`run_tests() -> Dictionary`**
     Executes internal self-tests for the `Loadouts` module, returning a dictionary of test results.
 
