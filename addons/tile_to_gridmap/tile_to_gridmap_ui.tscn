@@ -1,7 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://be2ortnjaagn3"]
 
 [ext_resource type="Script" uid="uid://bqcq3pln0gxhy" path="res://addons/tile_to_gridmap/tile_to_gridmap_ui.gd" id="1_ievsx"]
-[ext_resource type="Texture2D" uid="uid://ctitclhfoe0mh" path="res://addons/tile_to_gridmap/TileToGridMap.svg" id="2_ffiu3"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_ievsx"]
 font_size = 25
@@ -39,7 +38,6 @@ layout_mode = 2
 
 [node name="TextureRect" type="TextureRect" parent="Panel/CenterContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-texture = ExtResource("2_ffiu3")
 expand_mode = 2
 stretch_mode = 3
 

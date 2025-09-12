@@ -68,6 +68,9 @@ func _run() -> void:
             mod.free()
         mod = null
         script = null
+        # Yield a frame so deferred frees process before the next module.
+        # This reduces exit-time leaks during automated tests.
+        await process_frame
     var summary = "TOTAL: %d/%d failed" % [failed, total]
     print(summary)
     if hub:
@@ -85,13 +88,17 @@ func _run() -> void:
         "ThemeBootstrap",
         "EventTapLogger",
         "LogConfig",
+        # WorkspaceDebugger instantiates a CanvasItem overlay that must be
+        # freed explicitly to avoid RID leaks in headless tests.
+        "WorkspaceDebugger",
     ]
     for name in autoloads:
         var n = root.get_node_or_null("/root/%s" % name)
         if n:
             if n.has_method("cleanup"):
                 n.cleanup()
-            n.queue_free()
+            # Free immediately to avoid lingering nodes after tests.
+            n.free()
 
     # Allow a couple of frames so queued frees execute before exiting.
     await process_frame
