@@ -216,3 +216,16 @@ func get_port() -> int:
 
 func set_frame_rate(hz: float) -> void:
     frame_interval = (1.0 / max(0.001, hz))
+
+## Gracefully close any active client connections and stop the server.
+func cleanup() -> void:
+    for c in clients:
+        c.disconnect_from_host()
+    clients.clear()
+    client_authed.clear()
+    if server:
+        server.stop()
+
+func _exit_tree() -> void:
+    cleanup()
+

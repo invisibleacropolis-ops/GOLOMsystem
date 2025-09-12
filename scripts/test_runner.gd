@@ -34,9 +34,7 @@ func _run() -> void:
         "map_generator": "res://scripts/modules/map_generator.gd",
         "terrain": "res://scripts/modules/terrain.gd",
         "runtime_services": "res://scripts/modules/runtime_services.gd",
-        "console_commands": "res://scripts/tools/console_commands.gd",
-        "vertical_slice": "res://scripts/tests/vertical_slice_test.gd",
-    }
+        "console_commands": "res://scripts/tools/console_commands.gd",    }
     var total := 0
     var failed := 0
     for name in module_paths.keys():

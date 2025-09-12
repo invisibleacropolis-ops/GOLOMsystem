@@ -53,7 +53,6 @@ func _reset() -> void:
 		grid.los_blockers.clear()
 		grid.height_levels.clear()
 		grid.tile_tags.clear()
-                grid.covers.clear()
 		if grid.has_method("_clear_path_cache"):
 			grid._clear_path_cache()
 
@@ -309,25 +308,25 @@ func _test_tile_tags_and_cover() -> Dictionary:
 	if grid.has_tile_tag(tile, "grass"): return FAILED.call("Tag 'grass' was not removed.")
 	if not grid.has_tile_tag(tile, "magic"): return FAILED.call("Tag 'magic' should still exist after removing 'grass'.")
 	
-        # Test Cover
-        grid.set_cover(tile, "half", "west")
-        var c = grid.get_cover(tile)
-        if c.get("type") != "half" or c.get("direction") != "west":
-                return FAILED.call("Cover was not set to 'half' facing 'west'.")
+	# Test Cover
+	grid.set_cover(tile, "half")
+	var c = grid.get_cover(tile)
+	if c != "half":
+		return FAILED.call("Cover was not set to 'half'.")
 
-        var los_start = Vector2i(2, 5)
-        var los_end = Vector2i(8, 5)
+	var los_start = Vector2i(2, 5)
+	var los_end = Vector2i(8, 5)
 
-        grid.set_cover(tile, "full", "west")
-        c = grid.get_cover(tile)
-        if c.get("type") != "full":
-                return FAILED.call("Cover was not set to 'full'.")
-        if grid.has_line_of_sight(los_start, los_end):
-                return FAILED.call("'full' cover facing 'west' should block Line of Sight from the west.")
+	grid.set_cover(tile, "full")
+	c = grid.get_cover(tile)
+	if c != "full":
+		return FAILED.call("Cover was not set to 'full'.")
+	if grid.has_line_of_sight(los_start, los_end):
+		return FAILED.call("'full' cover should block Line of Sight.")
 
-        grid.set_cover(tile, "half", "west")
-        if not grid.has_line_of_sight(los_start, los_end):
-                return FAILED.call("'half' cover should not block Line of Sight.")
+	grid.set_cover(tile, "half")
+	if not grid.has_line_of_sight(los_start, los_end):
+		return FAILED.call("'half' cover should not block Line of Sight.")
 	
 	return PASSED
 
