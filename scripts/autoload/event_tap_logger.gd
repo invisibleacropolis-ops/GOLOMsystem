@@ -12,6 +12,7 @@ var _services
 var _event_bus
 var _humanizer
 var _buffer: Array[String] = []
+var _warned_missing := false ## log missing services once
 var _timer: Timer
 const USER_LOG_PATH := "user://event_feed.log"
 var _log_config: Node   ## Autoload for runtime verbosity control
@@ -35,7 +36,9 @@ func _ready() -> void:
 func _connect_bus() -> void:
     _services = _find_services()
     if _services == null:
-        _log("EventTap: RuntimeServices not found yet; will retry")
+        if not _warned_missing:
+            _log("EventTap: RuntimeServices not found yet; will retry")
+            _warned_missing = true
         return
     _event_bus = _services.get("event_bus") if _services else null
     if _event_bus and _event_bus.has_signal("event_pushed"):
