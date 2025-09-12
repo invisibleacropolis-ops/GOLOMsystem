@@ -65,4 +65,7 @@ func _init() -> void:
     if hub:
         var level2 = ("info" if failed == 0 else "error")
         hub.call_deferred(level2, "test_runner", summary, {"failed": failed, "total": total})
+    # Free autoload nodes to reduce resource leak warnings on exit.
+    for node in get_root().get_children():
+        node.free()
     quit(failed)
