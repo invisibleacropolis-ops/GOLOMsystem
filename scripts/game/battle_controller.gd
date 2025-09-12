@@ -35,7 +35,8 @@ func _ready() -> void:
     _connect_signals()
     # Announce battle start before the first round
     if services and services.event_bus:
-        services.event_bus.push({"t": "battle_begins"})
+        # Push a standardized event dictionary to the EventBus
+        services.event_bus.push({"t": "battle_begins", "data": {}})
     services.timespace.start_round()
 
 func _assert_wiring() -> void:
