@@ -54,6 +54,9 @@ visible = false
 services_path = NodePath("../Runtime")
 controller_path = NodePath("../BattleController")
 
+[node path="MainGUI/Root/RightPane/TopTabs"]
+current_tab = 0
+
 [node name="SliceDebug" type="CanvasLayer" parent="."]
 script = ExtResource("7")
 renderer_path = NodePath("../GridRealtimeRenderer")
