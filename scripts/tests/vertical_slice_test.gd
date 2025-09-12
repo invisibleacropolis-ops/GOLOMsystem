@@ -11,7 +11,7 @@ func run_tests() -> Dictionary:
     var passed := slice_res is PackedScene
     var log := ""
     if passed:
-        var slice := slice_res.instantiate()
+        var slice: Node = slice_res.instantiate()
         passed = slice.get_node_or_null("BattleController") != null
         log = "BattleController present" if passed else "BattleController missing"
         slice.free()

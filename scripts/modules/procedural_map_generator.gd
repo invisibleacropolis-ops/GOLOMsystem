@@ -36,10 +36,10 @@ func generate(params: Dictionary) -> LogicGridMap:
     var trees := FastNoiseLite.new()
     trees.seed = seed_str.hash() + 2
     trees.frequency = profile.get("tree_freq", 0.3)
-    var water_t := profile.get("water_threshold", -0.3)
-    var dirt_t := profile.get("dirt_threshold", 0.0)
-    var hill_t := profile.get("hill_threshold", 0.4)
-    var tree_t := profile.get("tree_threshold", 0.6)
+    var water_t: float = float(profile.get("water_threshold", -0.3))
+    var dirt_t: float = float(profile.get("dirt_threshold", 0.0))
+    var hill_t: float = float(profile.get("hill_threshold", 0.4))
+    var tree_t: float = float(profile.get("tree_threshold", 0.6))
 
     for x in width:
         for y in height:
@@ -98,8 +98,8 @@ func _assign_cover(map: LogicGridMap) -> void:
             continue
         if tags[0] == "mountain":
             map.set_los_blocker(pos, true)
-            for d in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN]:
-                var adj := pos + d
+            for d: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN]:
+                var adj: Vector2i = pos + d
                 if map.is_in_bounds(adj) and map.get_cover(adj) == "none":
                     map.set_cover(adj, "half")
 
