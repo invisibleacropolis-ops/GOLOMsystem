@@ -4,6 +4,8 @@ class_name BattleController
 ## Wires RuntimeServices, GridRealtimeRenderer, GridInteractor, and BattleHUD
 ## to provide basic selection, movement, and End Turn flow for the vertical slice.
 
+const Archetypes = preload("res://scripts/game/archetypes.gd")
+
 @export var services_path: NodePath
 @export var renderer_path: NodePath
 @export var interactor_path: NodePath
@@ -27,12 +29,16 @@ var _t2g_bridge: Node = null
 var _gridmap3d: GridMap = null
 var _actor_proxies: Dictionary = {}
 var _last_positions: Dictionary = {}
+var _archetypes := Archetypes.new()
+
 const SimpleEnemyAI = preload("res://scripts/ai/simple_enemy_ai.gd")
 var enemy_ai: SimpleEnemyAI = null # Stateless helper for enemy decision-making
+
 
 func _ready() -> void:
     _assert_wiring()
     _setup_grid()
+    _archetypes.load_from_file("res://data/archetypes.json")
     _spawn_demo_squads()
     _connect_signals()
     enemy_ai = SimpleEnemyAI.new(services) # Wire runtime services into AI module
@@ -185,6 +191,11 @@ func _spawn_demo_squads() -> void:
     enemy.runtime = services
     npc.runtime = services
 
+    # Apply archetype definitions for base stats and abilities
+    _archetypes.apply(player, "test_player", services.attributes, services.loadouts)
+    _archetypes.apply(enemy, "test_enemy", services.attributes, services.loadouts)
+    _archetypes.apply(npc, "test_npc", services.attributes, services.loadouts)
+
     # Add to scene tree and ASCII group for renderer collection
     add_child(player)
     add_child(enemy)
@@ -197,10 +208,6 @@ func _spawn_demo_squads() -> void:
     services.timespace.add_actor(player, player.INIT, player.ACT, player.grid_pos)
     services.timespace.add_actor(enemy, enemy.INIT, enemy.ACT, enemy.grid_pos)
     services.timespace.add_actor(npc, npc.INIT, npc.ACT, npc.grid_pos)
-
-    # Grant basic abilities for the player hotbar
-    services.loadouts.grant(player, "attack_basic")
-    services.loadouts.grant(player, "overwatch")
     # Proxies
     _ensure_actor_proxy(player)
     _ensure_actor_proxy(enemy)

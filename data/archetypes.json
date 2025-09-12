@@ -1,0 +1,41 @@
+{
+  "test_player": {
+    "attributes": {
+      "HLTH": 12,
+      "ACT": 10,
+      "INIT": 10,
+      "PWR": 3,
+      "SPD": 3,
+      "FCS": 3,
+      "CAP": 3,
+      "PER": 3
+    },
+    "loadout": ["attack_basic", "overwatch"]
+  },
+  "test_enemy": {
+    "attributes": {
+      "HLTH": 8,
+      "ACT": 10,
+      "INIT": 8,
+      "PWR": 3,
+      "SPD": 3,
+      "FCS": 2,
+      "CAP": 3,
+      "PER": 2
+    },
+    "loadout": ["attack_basic"]
+  },
+  "test_npc": {
+    "attributes": {
+      "HLTH": 5,
+      "ACT": 10,
+      "INIT": 5,
+      "PWR": 1,
+      "SPD": 2,
+      "FCS": 1,
+      "CAP": 2,
+      "PER": 1
+    },
+    "loadout": []
+  }
+}
