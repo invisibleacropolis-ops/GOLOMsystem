@@ -25,6 +25,8 @@ func build_from_tilemap() -> void:
     var layer: Node = get_node_or_null(terrain_layer)
     if layer and layer.has_method("build_gridmap"):
         layer.build_gridmap()
+    if grid_map and grid_map.mesh_library:
+        _ensure_texture_repeat(grid_map.mesh_library)
     if logic_map and grid_map:
         _sync_logic_from_gridmap()
     if renderer and logic_map:
@@ -69,6 +71,17 @@ func reveal_roof_region(tiles: Array[Vector2i]) -> void:
 func update_reveal_shader(world_pos: Vector3, radius: float) -> void:
     # TODO: iterate roof materials and update uniforms for reveal effect.
     push_warning("Shader update stub at %s r=%f" % [world_pos, radius])
+
+## Ensure textures cover entire mesh tiles by enabling repeat on materials.
+func _ensure_texture_repeat(lib: MeshLibrary) -> void:
+    for id in lib.get_item_list():
+        var mesh := lib.get_item_mesh(id)
+        if mesh == null:
+            continue
+        for s in mesh.get_surface_count():
+            var mat := mesh.surface_get_material(s)
+            if mat is StandardMaterial3D:
+                mat.texture_repeat = true
 
 # -----------------------------------------------------------------------------
 # Planned Features (scaffolding)

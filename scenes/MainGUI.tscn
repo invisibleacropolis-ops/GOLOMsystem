@@ -247,3 +247,10 @@ autowrap_mode = 2
 
 [node name="Close" type="Button" parent="Root/RightPane/Inspector/VBox"]
 text = "Close"
+
+[node name="Spacer" type="Control" parent="Root/RightPane"]
+size_flags_vertical = 3
+
+[node name="OptionsMenu" type="MenuButton" parent="Root/RightPane"]
+size_flags_horizontal = 8
+text = "Log Options"

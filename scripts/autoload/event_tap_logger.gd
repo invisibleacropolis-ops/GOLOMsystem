@@ -14,10 +14,16 @@ var _humanizer
 var _buffer: Array[String] = []
 var _timer: Timer
 const USER_LOG_PATH := "user://event_feed.log"
+var _log_config: Node   ## Autoload for runtime verbosity control
+var _file_level: int = 1 ## Current file log level
 
 func _ready() -> void:
     _touch_user_file()
     _append_line("--- EventTap initialized (awaiting EventBus) ---")
+    _log_config = get_tree().get_root().get_node_or_null("/root/LogConfig")
+    if _log_config:
+        _file_level = _log_config.file_level
+        _log_config.file_level_changed.connect(func(level): _file_level = level)
     _timer = Timer.new()
     _timer.one_shot = false
     _timer.wait_time = max(0.25, float(flush_interval_sec))
@@ -45,6 +51,8 @@ func _process(_dt: float) -> void:
         _connect_bus()
 
 func _on_event(evt: Dictionary) -> void:
+    if _log_config and _log_config.event_level(evt) > _file_level:
+        return
     var line := ""
     if _humanizer:
         line = _humanizer.humanize_event(evt)
