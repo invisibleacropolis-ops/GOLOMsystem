@@ -5,7 +5,8 @@ extends SceneTree
 
 
 func _init() -> void:
-    var hub = get_root().get_node_or_null("/root/ErrorHub")
+    get_root().name = "root"
+    var hub = get_root().get_node_or_null("ErrorHub")
     if hub:
         hub.call_deferred("info", "test_runner", "Starting module tests", {})
     var module_paths = {

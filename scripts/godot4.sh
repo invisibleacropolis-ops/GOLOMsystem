@@ -21,8 +21,20 @@ if [[ -z "$GODOT_BIN" && -f "$ROOT_DIR/godot4-config.json" ]]; then
   GODOT_BIN=$(sed -n 's/.*"wsl_exe"\s*:\s*"\([^"]\+\)".*/\1/p' "$ROOT_DIR/godot4-config.json" | head -n1 || true)
 fi
 
+# Clear if resolved path is not executable
+if [[ -n "$GODOT_BIN" && ! -x "$GODOT_BIN" ]]; then
+  GODOT_BIN=""
+fi
+
+# Final fallback: attempt to resolve `godot4` from PATH if still unset
 if [[ -z "$GODOT_BIN" ]]; then
-  echo "[ERROR] Configure GODOT4_LINUX_EXE or scripts/godot4-config.json (wsl_exe)." >&2
+  if command -v godot4 >/dev/null 2>&1; then
+    GODOT_BIN=$(command -v godot4)
+  fi
+fi
+
+if [[ -z "$GODOT_BIN" ]]; then
+  echo "[ERROR] Configure GODOT4_LINUX_EXE, scripts/godot4-config.json (wsl_exe), or install godot4 on PATH." >&2
   exit 1
 fi
 
