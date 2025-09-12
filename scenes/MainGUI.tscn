@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_gui.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/event_log.gd" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="Theme" path="res://themes/main_gui_theme.tres" id="5"]
 [ext_resource type="Script" path="res://scripts/ui/minimap_util.gd" id="7"]
 ; ext_resource id=6 removed (Event Viewer disabled)
+[ext_resource type="Script" path="res://scripts/ui/monitor_panel.gd" id="8"]
 
 [sub_resource type="SystemFont" id="99"]
 font_names = ["Times New Roman"]
@@ -168,6 +169,27 @@ text = "Overwatch"
 
 [node name="EndTurn" type="Button" parent="Root/RightPane/TopTabs/Actions/Buttons"]
 text = "End Turn"
+
+[node name="Monitor" type="Control" parent="Root/RightPane/TopTabs"]
+script = ExtResource("8")
+
+[node name="VBox" type="VBoxContainer" parent="Root/RightPane/TopTabs/Monitor"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="BattleStatus" type="Label" parent="Root/RightPane/TopTabs/Monitor/VBox"]
+text = "Battle: unknown"
+
+[node name="RoundInfo" type="Label" parent="Root/RightPane/TopTabs/Monitor/VBox"]
+text = "Round: 0, Turn: 0"
+
+[node name="ActorCounts" type="Label" parent="Root/RightPane/TopTabs/Monitor/VBox"]
+text = "Actors:"
 [node name="TextIO" type="Panel" parent="Root/RightPane"]
 visible = false
 
