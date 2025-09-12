@@ -101,7 +101,7 @@ Attach to a Live ASCII Stream (Normal Run)
 Files at a Glance (all live under the scripts/ folder)
 - scripts/godot4.ps1 — Primary, cross‑platform runner (Windows/WSL) with smart mode selection.
 - scripts/godot4.cmd — Thin batch shim that forwards to PowerShell.
-- scripts/godot4.sh — Lightweight Bash/WSL runner; supports env file + JSON config.
+ - scripts/godot4.sh — Lightweight Bash/WSL runner; supports env file + JSON config and detects `godot4` on PATH.
 - scripts/godot4-config.json — Central config for Godot 4 paths and default mode.
 - scripts/godot4-config.example.json — Copyable example config.
 - scripts/godot4.env.example — Example environment variables for Bash/WSL usage.
@@ -342,9 +342,6 @@ Headless module tests (PowerShell)
 
 Headless module tests (Bash)
 - scripts/run_headless.sh
-  Note: run_headless.sh expects a `godot4` command on PATH. If you have not added one, either:
-  - Use the runner directly: scripts/godot4.sh --headless --path . --script scripts/test_runner.gd
-  - Or create a temporary alias: alias godot4="bash $(pwd)/scripts/godot4.sh"; then re-run scripts/run_headless.sh
 
 Play ASCII interactively
 - Windows: pwsh -File scripts/ascii_play.ps1
@@ -364,9 +361,7 @@ Troubleshooting
 
 Godot not found
 - Symptom: “godot4: command not found” or “[ERROR] Configure GODOT4_LINUX_EXE …”.
-- Fix: All wrappers are under scripts/. You can either:
-  - Invoke the wrapper directly (no PATH change): scripts/godot4.sh … (Bash) or pwsh -File scripts/godot4.ps1 … (Windows)
-  - Or add a PATH alias: alias godot4="bash $(pwd)/scripts/godot4.sh"
+- Fix: All wrappers are under scripts/. You can either invoke `scripts/godot4.sh` (Bash) or `pwsh -File scripts/godot4.ps1` (Windows), or ensure a `godot4` command is on PATH for automatic detection.
   Also ensure scripts/godot4-config.json has correct win_exe/wsl_exe, or set env vars (GODOT4_WIN_EXE/GODOT4_LINUX_EXE).
 
 WSL path resolution fails

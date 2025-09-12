@@ -18,6 +18,8 @@ var mesh_kind: String = "sphere"  ## procedural 3D proxy shape (e.g. "sphere", "
 
 
 ## Initialize with optional name and grid placement.
+## When `_name` is empty the default node name is kept so Godot doesn't
+## emit warnings about empty names.
 func _init(
         _name: String = "",
         _pos: Vector2i = Vector2i.ZERO,
@@ -25,8 +27,12 @@ func _init(
         _size: Vector2i = Vector2i.ONE,
         _faction: String = ""
 ) -> void:
+
         # Avoid empty node names which trigger runtime warnings.
         if not _name.is_empty():
+
+        if _name != "":
+
                 name = _name
         grid_pos = _pos
         facing = _facing

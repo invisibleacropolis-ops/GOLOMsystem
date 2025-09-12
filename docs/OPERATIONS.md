@@ -48,7 +48,7 @@ the human observes in the editor, plays the game, and helps prioritize fixes.
     - Force Windows exe: `pwsh -File scripts/godot4.ps1 -Mode win --path . --editor`
 
 - `scripts/godot4.sh` (Bash/WSL/Linux)
-  - Purpose: Minimal shim to run the Linux binary; resolves from env or JSON.
+  - Purpose: Minimal shim to run the Linux binary; resolves from env, JSON, or a `godot4` command on PATH.
   - Env: `GODOT4_LINUX_EXE=/mnt/.../Godot_v4.4.1-stable_linux.x86_64`
   - Examples:
     - Open editor: `scripts/godot4.sh --path . --editor`

@@ -3,6 +3,7 @@
 extends SceneTree
 
 func _init() -> void:
+
     # Defer execution until the SceneTree is fully initialized. Accessing
     # absolute paths in `_init` triggers "outside the active scene tree"
     # errors, so we schedule the test run for the next idle frame.
@@ -16,6 +17,7 @@ func _run() -> void:
         get_root().name = "Root"
 
     var hub = get_root().get_node_or_null("/root/ErrorHub")
+
     if hub:
         hub.call_deferred("info", "test_runner", "Starting module tests", {})
     var module_paths = {
@@ -74,6 +76,7 @@ func _run() -> void:
         var level2 = ("info" if failed == 0 else "error")
         hub.call_deferred(level2, "test_runner", summary, {"failed": failed, "total": total})
 
+
     # Proactively cleanup autoload helpers to reduce exit-time leaks.
     # Proactively free autoload singletons to reduce exit-time resource leaks.
     var root := get_root()
@@ -96,4 +99,5 @@ func _run() -> void:
     # Allow a couple of frames so queued frees execute before exiting.
     await process_frame
     await process_frame
+
     quit(failed)

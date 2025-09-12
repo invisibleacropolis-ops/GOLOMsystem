@@ -19,7 +19,7 @@ Before running the headless tools, you need to configure the path to your Godot 
 
 ## Unified Runner (`godot4`)
 
-The `godot4.ps1` (PowerShell for Windows) and `godot4.sh` (bash for Linux/WSL) scripts provide a unified way to invoke the Godot executable with various arguments. They abstract away the complexities of platform-specific paths and commands.
+The `godot4.ps1` (PowerShell for Windows) and `godot4.sh` (bash for Linux/WSL) scripts provide a unified way to invoke the Godot executable with various arguments. They abstract away the complexities of platform-specific paths and commands and now auto-detect a `godot4` command on `PATH` when explicit configuration is missing.
 
 *   **Windows (PowerShell/cmd):**
     *   `pwsh -File scripts/godot4.ps1 --version` (to check Godot version)
