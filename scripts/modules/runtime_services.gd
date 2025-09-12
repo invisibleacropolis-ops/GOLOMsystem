@@ -37,13 +37,13 @@ func _init() -> void:
     _EventBusScript = load("res://scripts/modules/event_bus.gd")
 
     grid_map = _LogicGridMapScript.new()
-    timespace = _TurnTimespaceScript.new()
-    attributes = _AttributesScript.new()
-    statuses = _StatusesScript.new()
-    abilities = _AbilitiesScript.new()
-    loadouts = _LoadoutsScript.new()
-    reactions = _ReactionsScript.new()
-    event_bus = _EventBusScript.new()
+    timespace = _TurnTimespaceScript.new(); timespace.name = "TurnTimespace"
+    attributes = _AttributesScript.new(); attributes.name = "Attributes"
+    statuses = _StatusesScript.new(); statuses.name = "Statuses"
+    abilities = _AbilitiesScript.new(); abilities.name = "Abilities"
+    loadouts = _LoadoutsScript.new(); loadouts.name = "Loadouts"
+    reactions = _ReactionsScript.new(); reactions.name = "Reactions"
+    event_bus = _EventBusScript.new(); event_bus.name = "EventBus"
     # Timespace requires a grid map for movement.
     timespace.set_grid_map(grid_map)
 
@@ -93,6 +93,8 @@ func run_tests() -> Dictionary:
     grid_map.width = 2
     grid_map.height = 2
     var actor = Node.new()
+    # Name the temporary actor to avoid empty-name warnings when events are logged.
+    actor.name = "TestActor"
     timespace.add_actor(actor, 5, 1, Vector2i.ZERO)
     timespace.start_round()
     var moved = timespace.move_current_actor(Vector2i(1, 0))

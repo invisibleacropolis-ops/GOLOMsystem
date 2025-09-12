@@ -5,6 +5,18 @@ extends SceneTree
 
 
 func _init() -> void:
+    # Defer execution until the SceneTree is fully initialized. Accessing
+    # absolute paths in `_init` triggers "outside the active scene tree"
+    # errors, so we schedule the test run for the next idle frame.
+    call_deferred("_run")
+
+
+func _run() -> void:
+    # Ensure the root node has a stable name to avoid empty-name warnings
+    # in headless runs.
+    if get_root().name == "":
+        get_root().name = "Root"
+
     var hub = get_root().get_node_or_null("/root/ErrorHub")
     if hub:
         hub.call_deferred("info", "test_runner", "Starting module tests", {})
@@ -64,4 +76,13 @@ func _init() -> void:
     if hub:
         var level2 = ("info" if failed == 0 else "error")
         hub.call_deferred(level2, "test_runner", summary, {"failed": failed, "total": total})
+
+    # Proactively cleanup autoload helpers to reduce exit-time leaks.
+    var gateway = get_root().get_node_or_null("/root/AsciiGateway")
+    if gateway and gateway.has_method("cleanup"):
+        gateway.cleanup()
+    var server = get_root().get_node_or_null("/root/AsciiStreamServer")
+    if server:
+        server.queue_free()
+
     quit(failed)
