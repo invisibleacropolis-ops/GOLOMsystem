@@ -4,13 +4,12 @@
 # adjusting height levels.  It delegates to the supplied map instance so
 # systems can remain decoupled from the core grid representation.
 extends Resource
-class_name GridTerrain
+# Loaded on demand without `class_name` or `preload` so the resource can be
+# released cleanly after automated tests.
 
-const LogicGridMap = preload("res://scripts/grid/grid_map.gd")
+var _map
 
-var _map: LogicGridMap
-
-func _init(map: LogicGridMap) -> void:
+func _init(map: Object) -> void:
     _map = map
 
 ## Override movement cost for a tile.  Use `INF` for impassable terrain.

@@ -7,14 +7,14 @@
 extends "res://scripts/grid/grid_map.gd"
 class_name Grid
 
-const Pathfinding = preload("res://scripts/grid/pathfinding.gd")
-const LOS = preload("res://scripts/grid/los.gd")
-const GridTerrain = preload("res://scripts/grid/terrain.gd")
+var _PathfindingScript
+var _LOSScript
+var _GridTerrainScript
 
 ## Helper objects composed with the grid instance.
-var pathfinding: Pathfinding
-var los: LOS
-var terrain: GridTerrain
+var pathfinding
+var los
+var terrain
 
 ## Initialize composed helper services and ensure base class setup runs.
 ##
@@ -23,6 +23,29 @@ var terrain: GridTerrain
 ## structures empty, breaking movement queries for multi-tile actors.
 func _init() -> void:
     super._init()  # Populate neighbor offsets and other base data.
-    pathfinding = Pathfinding.new(self)
-    los = LOS.new(self)
-    terrain = GridTerrain.new(self)
+    _PathfindingScript = ResourceLoader.load(
+        "res://scripts/grid/pathfinding.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _LOSScript = ResourceLoader.load(
+        "res://scripts/grid/los.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _GridTerrainScript = ResourceLoader.load(
+        "res://scripts/grid/terrain.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    pathfinding = _PathfindingScript.new(self)
+    los = _LOSScript.new(self)
+    terrain = _GridTerrainScript.new(self)
+
+func _exit_tree() -> void:
+    pathfinding = null
+    los = null
+    terrain = null
+    _PathfindingScript = null
+    _LOSScript = null
+    _GridTerrainScript = null

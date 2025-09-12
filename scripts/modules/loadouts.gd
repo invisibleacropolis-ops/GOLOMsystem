@@ -1,7 +1,10 @@
 extends Node
-class_name Loadouts
 
-const Logging = preload("res://scripts/core/logging.gd")
+var Logging = ResourceLoader.load(
+    "res://scripts/core/logging.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
 
 ## Computes the current available ability set for an actor based
 ## on class, equipment, and active statuses.
@@ -56,3 +59,6 @@ func run_tests() -> Dictionary:
         "total": 1,
         "log": "multi-source abilities",
     }
+
+func _exit_tree() -> void:
+    Logging = null
