@@ -1,8 +1,6 @@
-extends SceneTree
-
 ## Simple headless test runner that invokes each module's
 ## `run_tests()` function and reports failures to stdout.
-
+extends SceneTree
 
 func _init() -> void:
     # Defer execution until the SceneTree is fully initialized. Accessing
@@ -78,11 +76,24 @@ func _run() -> void:
         hub.call_deferred(level2, "test_runner", summary, {"failed": failed, "total": total})
 
     # Proactively cleanup autoload helpers to reduce exit-time leaks.
-    var gateway = get_root().get_node_or_null("/root/AsciiGateway")
-    if gateway and gateway.has_method("cleanup"):
-        gateway.cleanup()
-    var server = get_root().get_node_or_null("/root/AsciiStreamServer")
-    if server:
-        server.queue_free()
+    # Proactively free autoload singletons to reduce exit-time resource leaks.
+    var root := get_root()
+    var autoloads := [
+        "AsciiGateway",
+        "AsciiStreamServer",
+        "AsciiKeybinds",
+        "ErrorHub",
+        "ThemeBootstrap",
+        "EventTapLogger",
+        "LogConfig",
+    ]
+    for name in autoloads:
+        var n = root.get_node_or_null("/root/%s" % name)
+        if n:
+            if n.has_method("cleanup"):
+                n.cleanup()
+            n.queue_free()
 
+    # Allow one frame so queued frees execute before exiting.
+    await process_frame
     quit(failed)

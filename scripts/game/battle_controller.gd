@@ -48,10 +48,14 @@ func _setup_grid() -> void:
     # Build a 32x32 world using MapGenerator -> TileToGridmap addon.
     var MapGen = preload("res://scripts/modules/map_generator.gd")
     var tileset: TileSet = null
-    if ResourceLoader.exists("res://addons/tile_to_gridmap/example/tilemaps/example_terrain.tres"):
+    # The example TileSet depends on imported textures that may be absent
+    # when the project is run headless.  Verify the import file exists
+    # before attempting to load to avoid runtime errors.
+    if FileAccess.file_exists("res://addons/tile_to_gridmap/example/tilemaps/terrain512_dg.png.import"):
         tileset = load("res://addons/tile_to_gridmap/example/tilemaps/example_terrain.tres")
     var meshlib: MeshLibrary = null
-    if ResourceLoader.exists("res://addons/tile_to_gridmap/example/gridmaps/scenes/library/dg_mesh_lib.tres"):
+    # Likewise ensure the mesh library's texture has been imported.
+    if FileAccess.file_exists("res://addons/tile_to_gridmap/example/gridmaps/meshes/dualgridterrain_0.png.import"):
         meshlib = load("res://addons/tile_to_gridmap/example/gridmaps/scenes/library/dg_mesh_lib.tres")
 
     # Map LogicGridMap terrain tags -> TileSet atlas coordinates used by T2GTerrainLayer
