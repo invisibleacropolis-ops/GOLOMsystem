@@ -56,13 +56,13 @@ func _ready() -> void:
     if loadouts: loadouts.name = "Loadouts"
     if reactions: reactions.name = "Reactions"
     if event_bus: event_bus.name = "EventBus"
-    add_child(timespace)
-    add_child(attributes)
-    add_child(statuses)
-    add_child(abilities)
-    add_child(loadouts)
-    add_child(reactions)
-    add_child(event_bus)
+    if timespace: add_child(timespace)
+    if attributes: add_child(attributes)
+    if statuses: add_child(statuses)
+    if abilities: add_child(abilities)
+    if loadouts: add_child(loadouts)
+    if reactions: add_child(reactions)
+    if event_bus: add_child(event_bus)
     statuses.set_attributes_service(attributes)
     abilities.load_from_file("res://data/actions.json")
     timespace.register_reaction_watcher(func(actor, action_id, payload):
