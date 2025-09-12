@@ -53,6 +53,7 @@ func generate(params: Dictionary) -> LogicGridMap:
             map.height_levels[pos] = h
 
     _carve_roads(map)
+    _assign_cover(map)
     return map
 
 ## Carves a simple cross-shaped road network so paths remain connected.
@@ -67,6 +68,22 @@ func _carve_roads(map: LogicGridMap) -> void:
         var pos := Vector2i(mid_x, y)
         map.tile_tags[pos] = ["road"]
         map.height_levels[pos] = 1
+
+## Assigns simple cover and LOS blockers based on terrain tags.
+## Currently mountains block line of sight and grant adjacent half cover.
+## This allows battles to reason about defensive positions without
+## additional post-processing by the caller.
+func _assign_cover(map: LogicGridMap) -> void:
+    for pos in map.tile_tags.keys():
+        var tags: Array = map.tile_tags[pos]
+        if tags.size() == 0:
+            continue
+        if tags[0] == "mountain":
+            map.set_los_blocker(pos, true)
+            for d in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN]:
+                var adj := pos + d
+                if map.is_in_bounds(adj) and map.get_cover(adj) == "none":
+                    map.set_cover(adj, "half")
 
 ## Lightweight self-test for CI usage.
 func run_tests() -> Dictionary:
@@ -94,6 +111,15 @@ func run_tests() -> Dictionary:
         if tags.size() > 0 and tags[0] == "road":
             road_count += 1
     if road_count == 0:
+        failed += 1
+
+    # Verify cover assignment for a manual mountain tile.
+    total += 1
+    var mtile := Vector2i(0, 0)
+    map.tile_tags[mtile] = ["mountain"]
+    map.cover_types.clear()
+    gen._assign_cover(map)
+    if map.get_cover(Vector2i(1, 0)) != "half":
         failed += 1
 
     # Release instances to prevent leaks in automated test runs
