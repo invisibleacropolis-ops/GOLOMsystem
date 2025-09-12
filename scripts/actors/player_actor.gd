@@ -6,7 +6,9 @@ class_name PlayerActor
 
 var runtime
 var weapon_name: String = "Sword"
-var mesh_kind: String = "sphere" ## visual proxy shape
+
+# BaseActor already defines `mesh_kind`; removing duplicate prevents
+# "member already exists" parse errors when loading the script.
 
 func _unhandled_input(event: InputEvent) -> void:
     if runtime == null:

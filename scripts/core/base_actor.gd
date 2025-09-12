@@ -25,7 +25,9 @@ func _init(
         _size: Vector2i = Vector2i.ONE,
         _faction: String = ""
 ) -> void:
-        name = _name
+        # Avoid empty node names which trigger runtime warnings.
+        if not _name.is_empty():
+                name = _name
         grid_pos = _pos
         facing = _facing
         size = _size
