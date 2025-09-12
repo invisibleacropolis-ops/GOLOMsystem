@@ -24,7 +24,7 @@ summary_ts="logs/editor_launch_linux_status_${ts}.json"
 {
   echo "{"
   echo "  \"mode\": \"linux\"," 
-  echo "  \"started_at\": \"$(date -u -r \"$log\" +%Y-%m-%dT%H:%M:%SZ)\"," 
+  echo "  \"started_at\": \"$(date -u -r "$log" +%Y-%m-%dT%H:%M:%SZ)\"," 
   echo "  \"finished_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"," 
   echo "  \"exit_code\": $code,"
   echo "  \"crash_detected\": ${crash},"
