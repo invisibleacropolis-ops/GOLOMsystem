@@ -1,12 +1,15 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_gui.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/event_log.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/ui/message_feed.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/ui/text_input_cursor.gd" id="4"]
 [ext_resource type="Theme" path="res://themes/main_gui_theme.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/Char_battle_hud.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/ui/minimap_util.gd" id="7"]
+
 ; ext_resource id=6 removed (Event Viewer disabled)
+[ext_resource type="Script" path="res://scripts/ui/monitor_panel.gd" id="8"]
 
 [sub_resource type="SystemFont" id="99"]
 font_names = ["Times New Roman"]
@@ -76,6 +79,30 @@ text = "End Turn (moved)"
 [node name="ToggleCamera" type="Button" parent="Root/LeftPane/WorldOverlay/Buttons"]
 text = "Camera: On"
 
+
+[node name="CharHUD" type="Panel" parent="Root/LeftPane/WorldOverlay"]
+anchors_preset = 1
+offset_left = 8.0
+offset_top = 40.0
+script = ExtResource("6")
+
+[node name="HBox" type="HBoxContainer" parent="Root/LeftPane/WorldOverlay/CharHUD"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="Root/LeftPane/WorldOverlay/CharHUD/HBox"]
+text = "Actor"
+
+[node name="HP" type="Label" parent="Root/LeftPane/WorldOverlay/CharHUD/HBox"]
+text = "HP:0"
+
+[node name="MP" type="Label" parent="Root/LeftPane/WorldOverlay/CharHUD/HBox"]
+text = "MP:0"
+
+[node name="Status" type="Label" parent="Root/LeftPane/WorldOverlay/CharHUD/HBox"]
+text = "Status:"
+
+[node name="Abilities" type="Label" parent="Root/LeftPane/WorldOverlay/CharHUD/HBox"]
+text = "Abilities:"
 [node name="EventLog" type="Panel" parent="Root/LeftPane"]
 custom_minimum_size = Vector2(600, 280)
 
@@ -168,6 +195,27 @@ text = "Overwatch"
 
 [node name="EndTurn" type="Button" parent="Root/RightPane/TopTabs/Actions/Buttons"]
 text = "End Turn"
+
+[node name="Monitor" type="Control" parent="Root/RightPane/TopTabs"]
+script = ExtResource("8")
+
+[node name="VBox" type="VBoxContainer" parent="Root/RightPane/TopTabs/Monitor"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="BattleStatus" type="Label" parent="Root/RightPane/TopTabs/Monitor/VBox"]
+text = "Battle: unknown"
+
+[node name="RoundInfo" type="Label" parent="Root/RightPane/TopTabs/Monitor/VBox"]
+text = "Round: 0, Turn: 0"
+
+[node name="ActorCounts" type="Label" parent="Root/RightPane/TopTabs/Monitor/VBox"]
+text = "Actors:"
 [node name="TextIO" type="Panel" parent="Root/RightPane"]
 visible = false
 
