@@ -78,25 +78,25 @@ func execute(actor: Object, id: String, target, attrs = null, grid_map = null) -
 		cooldowns[actor] = {}
 	cooldowns[actor][id] = def.get("cooldown", 0)
 	log_event("ability", actor, null, {"id": id, "target": target})
-        for effect in def.get("effects", []):
-                if effect == "damage" and target != null:
-                        # Legacy branch for simple flat damage abilities.
-                        if target.has_method("apply_damage"):
-                                target.apply_damage(1)
-                        elif target.get("HLTH") != null:
-                                target.HLTH = max(0, target.HLTH - 1)
-                        emit_signal("damage_applied", actor, target, 1)
-                elif effect == "deal_damage" and target != null:
-                        var dmg := def.get("damage_amount", 0)
-                        if CombatRules and grid_map != null:
-                                var base := CombatRules.compute_damage(actor, target, grid_map)
-                                dmg = base * def.get("damage_amount", 1)
-                        if target.has_method("apply_damage"):
-                                target.apply_damage(dmg)
-                        elif target.get("HLTH") != null:
-                                target.HLTH = max(0, target.HLTH - dmg)
-                        emit_signal("damage_applied", actor, target, dmg)
-        return def.get("follow_up", [])
+	for effect in def.get("effects", []):
+		if effect == "damage" and target != null:
+			# Legacy branch for simple flat damage abilities.
+			if target.has_method("apply_damage"):
+				target.apply_damage(1)
+			elif target.get("HLTH") != null:
+				target.HLTH = max(0, target.HLTH - 1)
+			emit_signal("damage_applied", actor, target, 1)
+		elif effect == "deal_damage" and target != null:
+			var dmg: int = int(def.get("damage_amount", 0))
+			if CombatRules and grid_map != null:
+				var base := CombatRules.compute_damage(actor, target, grid_map)
+				dmg = base * def.get("damage_amount", 1)
+			if target.has_method("apply_damage"):
+				target.apply_damage(dmg)
+			elif target.get("HLTH") != null:
+				target.HLTH = max(0, target.HLTH - dmg)
+			emit_signal("damage_applied", actor, target, dmg)
+	return def.get("follow_up", [])
 
 
 func run_tests() -> Dictionary:

@@ -169,6 +169,24 @@ custom_minimum_size = Vector2(320, 240)
 
 [node name="Characters" type="Control" parent="Root/RightPane/TopTabs"]
 
+[node name="VBox" type="VBoxContainer" parent="Root/RightPane/TopTabs/Characters"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="Name" type="Label" parent="Root/RightPane/TopTabs/Characters/VBox"]
+text = "No actor"
+
+[node name="Stats" type="RichTextLabel" parent="Root/RightPane/TopTabs/Characters/VBox"]
+size_flags_vertical = 3
+
+[node name="Abilities" type="RichTextLabel" parent="Root/RightPane/TopTabs/Characters/VBox"]
+size_flags_vertical = 3
+
 [node name="Inventory" type="Control" parent="Root/RightPane/TopTabs"]
 
 [node name="Powers" type="Control" parent="Root/RightPane/TopTabs"]
