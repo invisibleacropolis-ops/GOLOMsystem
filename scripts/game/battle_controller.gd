@@ -256,12 +256,16 @@ func _on_tile_clicked(tile: Vector2i, button: int, _mods: int) -> void:
         var target = services.grid_map.get_actor_at(tile)
         if target and target != selected_actor:
             var t_fac = String(target.get("faction"))
-            if t_fac == "enemy" and _is_target(tile) and services.timespace.can_perform(selected_actor, "attack", target):
-                services.timespace.perform(selected_actor, "attack", target)
-                attack_mode = false
-                _update_hud()
-                _paint_board()
-                return
+            # Verify the target is hostile, highlighted as a valid LOS target, and
+            # still visible from the actor's current position before executing the attack.
+            if t_fac == "enemy" and _is_target(tile):
+                var a_pos: Vector2i = services.grid_map.actor_positions.get(selected_actor, null)
+                if a_pos != null and services.grid_map.has_line_of_sight(a_pos, tile) and services.timespace.can_perform(selected_actor, "attack", target):
+                    services.timespace.perform(selected_actor, "attack", target)
+                    attack_mode = false
+                    _update_hud()
+                    _paint_board()
+                    return
     # Otherwise move along a shortest path if within AP budget (step-by-step performs)
     if _is_reachable(tile):
         _step_move_to(selected_actor, tile)
@@ -417,6 +421,13 @@ func _is_reachable(tile: Vector2i) -> bool:
     return false
 
 func _compute_los_targets(from_pos: Vector2i) -> Array[Vector2i]:
+    """Return enemy tile positions visible from ``from_pos``.
+
+    The filter uses ``grid_map.has_line_of_sight`` so callers receive only
+    targets that can currently be attacked. This guards against stale
+    previews when terrain or unit positions change between highlight and
+    confirmation clicks.
+    """
     var out: Array[Vector2i] = []
     for other in services.grid_map.get_all_actors():
         if other == null or other == selected_actor:
