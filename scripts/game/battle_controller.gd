@@ -27,12 +27,16 @@ var _t2g_bridge: Node = null
 var _gridmap3d: GridMap = null
 var _actor_proxies: Dictionary = {}
 var _last_positions: Dictionary = {}
+const SimpleEnemyAI = preload("res://scripts/ai/simple_enemy_ai.gd")
+var enemy_ai: SimpleEnemyAI = null # Stateless helper for enemy decision-making
 
 func _ready() -> void:
     _assert_wiring()
     _setup_grid()
     _spawn_demo_squads()
     _connect_signals()
+    enemy_ai = SimpleEnemyAI.new(services) # Wire runtime services into AI module
+    add_child(enemy_ai)
     # Announce battle start before the first round
     if services and services.event_bus:
         services.event_bus.push({"t": "battle_begins"})
@@ -224,7 +228,8 @@ func _on_turn_started(actor: Object) -> void:
     _auto_resolve = not _any_players_alive()
     var faction = String(actor.get("faction"))
     if faction != "player" or _auto_resolve:
-        _take_auto_turn(actor)
+        if enemy_ai:
+            enemy_ai.take_turn(actor) # Delegate non-player turns to AI
 
 func _on_turn_ended(actor: Object) -> void:
     _clear_selection()
@@ -478,71 +483,8 @@ func _step_move_to(actor: Object, dst: Vector2i) -> void:
             break
         ap -= 1
 
-func _take_auto_turn(actor: Object) -> void:
-    var a_pos = services.grid_map.actor_positions.get(actor, null)
-    if a_pos == null:
-        services.timespace.end_turn(); return
-    var my_fac := String(actor.get("faction")) if actor.has_method("get") else ""
-    var target = _nearest_opponent(a_pos, my_fac)
-    if target == null:
-        # No opponents: consider overwatch to hold ground
-        if services.timespace.can_perform(actor, "overwatch", null):
-            services.timespace.perform(actor, "overwatch", null)
-        services.timespace.end_turn(); return
-    var t_pos = services.grid_map.actor_positions.get(target, null)
-    if t_pos == null:
-        services.timespace.end_turn(); return
-    # Simple flee heuristic at low HP
-    var hp := int(actor.get("HLTH")) if actor.has_method("get") else 1
-    if hp <= 1:
-        var away := _step_away(a_pos, t_pos)
-        if away != a_pos and services.timespace.can_perform(actor, "move", away):
-            services.timespace.perform(actor, "move", away)
-            services.timespace.end_turn(); return
-    # Attack if LOS else step toward target; otherwise overwatch.
-    if services.grid_map.has_line_of_sight(a_pos, t_pos) and services.timespace.can_perform(actor, "attack", target):
-        services.timespace.perform(actor, "attack", target)
-    else:
-        var path: Array[Vector2i] = services.grid_map.find_path_for_actor(actor, a_pos, t_pos)
-        if path.size() >= 2:
-            var next_step: Vector2i = path[1]
-            if services.timespace.can_perform(actor, "move", next_step):
-                services.timespace.perform(actor, "move", next_step)
-        elif services.timespace.can_perform(actor, "overwatch", null):
-            services.timespace.perform(actor, "overwatch", null)
-    services.timespace.end_turn()
-
-func _nearest_opponent(from_pos: Vector2i, my_fac: String):
-    var best = null
-    var best_d = 1_000_000
-    for other in services.grid_map.get_all_actors():
-        if other == null:
-            continue
-        var fac = String(other.get("faction")) if other.has_method("get") else ""
-        if fac == my_fac:
-            continue
-        if int(other.get("HLTH")) <= 0:
-            continue
-        var p = services.grid_map.actor_positions.get(other, null)
-        if p == null:
-            continue
-        var d = services.grid_map.get_chebyshev_distance(from_pos, p)
-        if d < best_d:
-            best_d = d
-            best = other
-    return best
-
 func _any_players_alive() -> bool:
     for a in services.grid_map.get_all_actors():
         if a and String(a.get("faction")) == "player" and int(a.get("HLTH")) > 0:
             return true
     return false
-
-func _step_away(from_pos: Vector2i, threat_pos: Vector2i) -> Vector2i:
-    var dx = sign(from_pos.x - threat_pos.x)
-    var dy = sign(from_pos.y - threat_pos.y)
-    var candidates = [Vector2i(from_pos.x + dx, from_pos.y), Vector2i(from_pos.x, from_pos.y + dy), Vector2i(from_pos.x + dx, from_pos.y + dy)]
-    for c in candidates:
-        if services.grid_map.is_in_bounds(c) and not services.grid_map.is_occupied(c):
-            return c
-    return from_pos
