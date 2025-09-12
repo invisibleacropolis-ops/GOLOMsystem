@@ -1,4 +1,13 @@
 {
+  "move": {
+    "act_cost": 1,
+    "chi_cost": 0,
+    "cooldown": 0,
+    "range": 1,
+    "uses_los": false,
+    "effects": ["move_to"],
+    "tags": ["movement"]
+  },
   "strike": {
     "act_cost": 1,
     "chi_cost": 0,
@@ -27,6 +36,8 @@
     "uses_los": true,
     "effects": ["deal_damage"],
     "damage_amount": 1,
+    "damage_key": "phys",
+    "cover_mod": -40,
     "tags": ["combat", "ranged"]
   },
   "overwatch": {

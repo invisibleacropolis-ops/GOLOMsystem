@@ -220,8 +220,11 @@ func _connect_signals() -> void:
     services.timespace.turn_ended.connect(_on_turn_ended)
     services.timespace.battle_over.connect(_on_battle_over)
     interactor.tile_clicked.connect(_on_tile_clicked)
-    if hud and hud.has_signal("end_turn_requested"):
-        hud.end_turn_requested.connect(_on_end_turn_pressed)
+    if hud:
+        if hud.has_signal("end_turn_requested"):
+            hud.end_turn_requested.connect(_on_end_turn_pressed)
+        if hud.has_signal("attack_requested"):
+            hud.attack_requested.connect(_enter_attack_mode)
     if hotbar and hotbar.has_method("set_attack_handler"):
         hotbar.set_attack_handler(Callable(self, "_enter_attack_mode"))
 
@@ -273,6 +276,11 @@ func _on_tile_clicked(tile: Vector2i, button: int, _mods: int) -> void:
         var target = services.grid_map.get_actor_at(tile)
         if target and target != selected_actor:
             var t_fac = String(target.get("faction"))
+            if t_fac == "enemy" and _is_target(tile):
+                if hud and hud.has_method("set_target"):
+                    hud.set_target(target)
+                return
+
             # Verify the target is hostile, highlighted as a valid LOS target, and
             # still visible from the actor's current position before executing the attack.
             if t_fac == "enemy" and _is_target(tile):
@@ -283,6 +291,7 @@ func _on_tile_clicked(tile: Vector2i, button: int, _mods: int) -> void:
                     _update_hud()
                     _paint_board()
                     return
+
     # Otherwise move along a shortest path if within AP budget (step-by-step performs)
     if _is_reachable(tile):
         _step_move_to(selected_actor, tile)
@@ -318,7 +327,13 @@ func _ensure_actor_proxy(a) -> void:
     _last_positions[a] = a.get("grid_pos") if a.has_method("get") else Vector2i.ZERO
 
 func _on_action_performed(actor: Object, id: String, payload) -> void:
-    if id == "move" and _actor_proxies.has(actor):
+    if id == "attack" and actor == selected_actor:
+        attack_mode = false
+        if hud and hud.has_method("set_target"):
+            hud.set_target(null)
+        _update_hud()
+        _paint_board()
+    elif id == "move" and _actor_proxies.has(actor):
         var prev: Vector2i = _last_positions.get(actor, actor.get("grid_pos"))
         var dst: Vector2i = payload if typeof(payload) == TYPE_VECTOR2I else prev
         var delta := dst - prev
@@ -479,6 +494,10 @@ func _update_hud() -> void:
     var ap = services.timespace.get_action_points(selected_actor)
     if hud and hud.has_method("set_status"):
         hud.set_status(name, hp, ap)
+    if hud and hud.has_method("set_actor"):
+        if hud.get("services_path") == NodePath(""):
+            hud.services_path = services.get_path()
+        hud.set_actor(selected_actor)
     _update_hotbar()
 
 func _update_hotbar() -> void:
@@ -488,6 +507,8 @@ func _update_hotbar() -> void:
 
 func _enter_attack_mode() -> void:
     attack_mode = true
+    if hud and hud.has_method("set_target"):
+        hud.set_target(null)
     _paint_board()
 
 ## Move the actor toward `dst` consuming action points for each step.
