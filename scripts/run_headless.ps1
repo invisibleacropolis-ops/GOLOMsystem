@@ -33,25 +33,28 @@ if ($godotExe -ieq 'godot4') {
 Write-Host "Tests finished with exit code $testExit. Log: logs/headless_tests.log"
 
 Write-Host 'Running ASCII console smoke...'
-$asciiCmds = @(
-    'spawn A 0 0',
-    'list',
-    'select 0 0',
-    'move 1 1',
-    'target 1 0',
-    'clear',
-    'remove A',
-    'end_turn',
-    'quit'
-) -join [Environment]::NewLine
-
-Set-Content -Path 'logs/ascii_commands.txt' -Value ($asciiCmds + [Environment]::NewLine)
+$asciiPath = 'logs/ascii_commands.txt'
+if (-not (Test-Path $asciiPath)) {
+    # Provide a default command script when none exists.
+    $asciiCmds = @(
+        'spawn A 0 0',
+        'list',
+        'select 0 0',
+        'move 1 1',
+        'target 1 0',
+        'clear',
+        'remove A',
+        'end_turn',
+        'quit'
+    ) -join [Environment]::NewLine
+    Set-Content -Path $asciiPath -Value ($asciiCmds + [Environment]::NewLine)
+}
 if ($godotExe -ieq 'godot4') {
   # Run console in piped mode so it exits on EOF.
-  Get-Content 'logs/ascii_commands.txt' | & $godotExe --headless --path . --script scripts/tools/ascii_console.gd -- --pipe 2>&1 | Tee-Object -FilePath 'logs/ascii_smoke.log' | Out-Null
+  Get-Content $asciiPath | & $godotExe --headless --path . --script scripts/tools/ascii_console.gd -- --pipe 2>&1 | Tee-Object -FilePath 'logs/ascii_smoke.log' | Out-Null
 } else {
   # Pass --pipe and feed commands via redirected stdin; wait for exit.
-  $p2 = Start-Process -FilePath $godotExe -ArgumentList '--headless','--path','.', '--script','scripts/tools/ascii_console.gd','--','--pipe' -NoNewWindow -PassThru -RedirectStandardInput 'logs\ascii_commands.txt' -RedirectStandardOutput 'logs\ascii_smoke.log' -RedirectStandardError 'logs\ascii_smoke.err.log'
+  $p2 = Start-Process -FilePath $godotExe -ArgumentList '--headless','--path','.', '--script','scripts/tools/ascii_console.gd','--','--pipe' -NoNewWindow -PassThru -RedirectStandardInput $asciiPath -RedirectStandardOutput 'logs\ascii_smoke.log' -RedirectStandardError 'logs\ascii_smoke.err.log'
   $p2.WaitForExit() | Out-Null
 }
 
