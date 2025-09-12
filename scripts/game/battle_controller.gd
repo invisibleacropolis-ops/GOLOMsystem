@@ -219,6 +219,8 @@ func _on_turn_started(actor: Object) -> void:
     _update_hud()
     _paint_board()
     _update_hotbar()
+    if interactor and interactor.has_method("set_path_preview_actor"):
+        interactor.set_path_preview_actor(actor)
     # Enable auto-resolution when no players remain; otherwise
     # non-player factions still act autonomously.
     _auto_resolve = not _any_players_alive()
@@ -234,6 +236,8 @@ func _on_ap_changed(actor: Object, _old: int, _new: int) -> void:
         _update_hud()
         _paint_board()
         _update_hotbar()
+        if interactor and interactor.has_method("set_path_preview_actor"):
+            interactor.set_path_preview_actor(actor)
 
 func _on_battle_over(faction) -> void:
     if hud and hud.has_method("show_outcome"):
@@ -267,11 +271,15 @@ func _on_tile_clicked(tile: Vector2i, button: int, _mods: int) -> void:
         _step_move_to(selected_actor, tile)
         _update_hud()
         _paint_board()
+        if interactor and interactor.has_method("set_path_preview_actor"):
+            interactor.set_path_preview_actor(selected_actor)
 
 func _clear_selection() -> void:
     reachable.clear()
     if vis.has_method("clear_all"):
         vis.clear_all()
+    if interactor and interactor.has_method("clear_path_preview"):
+        interactor.clear_path_preview()
 
 func _ensure_actor_proxy(a) -> void:
     if _gridmap3d == null:
@@ -458,25 +466,45 @@ func _enter_attack_mode() -> void:
     attack_mode = true
     _paint_board()
 
+## Move the actor toward `dst` consuming action points for each step.
+##
+## Path cost mirrors the reachability calculation, considering movement
+## cost, diagonal and turn penalties, as well as climb effort. Movement
+## stops when AP is exhausted or an intermediate step fails.
 func _step_move_to(actor: Object, dst: Vector2i) -> void:
-    # Follow a shortest path, performing one-tile moves up to AP budget
+    # Follow a shortest path, performing one-tile moves while deducting AP
     var start = services.grid_map.actor_positions.get(actor, null)
     if start == null:
         return
     var path: Array[Vector2i] = services.grid_map.find_path_for_actor(actor, start, dst)
     if path.is_empty():
         return
-    # First element is the start; iterate subsequent steps
-    var ap = services.timespace.get_action_points(actor)
+    var ap := float(services.timespace.get_action_points(actor))
     for i in range(1, path.size()):
-        if ap <= 0:
+        if ap <= 0.0:
             break
         var step: Vector2i = path[i]
+        var prev: Vector2i = path[i - 1]
+        var cost: float = services.grid_map.get_movement_cost(step)
+        if step.x != prev.x and step.y != prev.y:
+            cost *= 1.4
+        var hdiff = services.grid_map.get_height(step) - services.grid_map.get_height(prev)
+        if hdiff > int(services.grid_map.get("MAX_CLIMB_HEIGHT")):
+            break
+        if hdiff > 0:
+            cost += float(services.grid_map.get("CLIMB_COST")) * float(hdiff)
+        if i >= 2:
+            var prev_dir = Vector2i(Vector2(path[i-1] - path[i-2]).normalized().round())
+            var next_dir = Vector2i(Vector2(step - prev).normalized().round())
+            if next_dir != prev_dir:
+                cost += float(services.grid_map.get("TURN_COST"))
+        if cost - 1e-6 > ap:
+            break
         if not services.timespace.can_perform(actor, "move", step):
             break
         if not services.timespace.perform(actor, "move", step):
             break
-        ap -= 1
+        ap -= cost
 
 func _take_auto_turn(actor: Object) -> void:
     var a_pos = services.grid_map.actor_positions.get(actor, null)
