@@ -9,6 +9,7 @@
 -   Expose `resolve_next()` to pop the highest-priority reaction from the queue.
 -   Allow AI planners or other systems to inspect the current queue through `get_pending()` and the `reaction_queued` signal.
 -   Log each reaction trigger in the `event_log` for later inspection and debugging.
+-   Provide utilities to prune released actors and clear the queue during teardown.
 
 ## Core Concepts and API Details
 
@@ -22,6 +23,8 @@ As a `Node`, `Reactions` can be integrated into your game's scene tree, often as
 
 *   **`queued`** (`Array`, Default: `[]`): This array stores all the reaction entries that have been triggered and are awaiting resolution. Entries are typically dictionaries containing information about the reacting actor, the type of reaction, and any relevant data.
 *   **`event_log`** (`Array`, Default: `[]`): An internal log for recording events related to reactions, useful for debugging.
+
+Stale reactions referencing freed actors are automatically removed when resolving or inspecting the queue.
 
 #### Methods
 
@@ -38,6 +41,10 @@ As a `Node`, `Reactions` can be integrated into your game's scene tree, often as
 *   **`get_pending() -> Array`**
     Returns a copy of the `queued` array, allowing other systems to inspect the reactions that are currently awaiting resolution without modifying the queue.
     *   **Returns:** An `Array` of `Variant`s (reaction entries).
+*   **`cleanup_actor(actor: Object) -> void`**
+    Removes any queued reactions associated with `actor`. Call this when an actor exits the game to prevent leaks.
+*   **`clear() -> void`**
+    Empties the queue and event log entirely. Primarily intended for tests and debugging.
 *   **`run_tests() -> Dictionary`**
     Executes internal self-tests for the `Reactions` module, returning a dictionary of test results.
 
