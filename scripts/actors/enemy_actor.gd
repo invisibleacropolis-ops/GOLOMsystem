@@ -10,7 +10,10 @@ const PlayerActor = preload("res://scripts/actors/player_actor.gd")
 var runtime
 var attack_range: int = 1 ## Maximum Manhattan distance for attacks.
 var weapon_name: String = "Rusty Axe"
-var mesh_kind: String = "cube" ## visual proxy shape
+
+# BaseActor defines `mesh_kind`; duplicating it in subclasses caused
+# "member already exists" parse errors.  This class now relies on the
+# inherited property.
 
 func _ready() -> void:
     if runtime:

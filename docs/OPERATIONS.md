@@ -116,8 +116,9 @@ the human observes in the editor, plays the game, and helps prioritize fixes.
   - Streaming client: `pwsh -File scripts/ascii_stream_client.ps1 -Host 127.0.0.1 -Port 3456`
 
 **Scene Runtime and Debug**
-- `res://scenes/VerticalSlice.tscn`
-  - Main systems: `RuntimeServices`, `GridRealtimeRenderer` (2D overlay), `GridInteractor`, `BattleController`, `MainGUI`.
+  - `res://scenes/VerticalSlice.tscn`
+    - Main systems: `RuntimeServices`, `GridRealtimeRenderer` (2D overlay), `GridInteractor`, `BattleController`, `MainGUI`.
+    - MainGUI's **Character** tab mirrors the active actor, showing core stats and abilities from `Loadouts.get_available()`.
   - Debug UI: `SliceDebug` with toggles for ASCII stream and a checkbox to show/hide the 2D grid overlay.
   - In‑game tests: `InGameTests` (script `scripts/tools/test_harness_node.gd`) auto‑run and publish results via `WorkspaceDebugger`.
 

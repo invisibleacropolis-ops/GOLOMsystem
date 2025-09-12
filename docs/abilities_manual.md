@@ -21,11 +21,12 @@ This is the main class for managing abilities. It's a `Node`, meaning it can be 
 *   **`catalog`** (`Dictionary`, Default: `{}`): This dictionary stores all registered ability definitions. When you `register_ability` or `load_from_file`, the ability data is added here, keyed by a unique ability ID. This acts as the central repository for all ability blueprints.
 *   **`cooldowns`** (`Dictionary`, Default: `{}`): This dictionary tracks the current cooldown status for active abilities. When an ability is used, its cooldown is set here, and `tick_cooldowns()` reduces these counters over time.
 *   **`event_log`** (`Array`, Default: `[]`): An array that records significant events related to abilities, such as an ability being used or damage being applied. This log is crucial for debugging, analytics, and potentially for replaying game states.
+*   **`event_bus`** (`EventBus`, Optional): Reference to the global event log. When set, `log_event()` forwards entries to the shared `EventBus` using the `{t, data}` schema.
 
 #### Methods
 
 *   **`log_event(t: String, actor: Object = null, pos: Variant = null, data: Variant = null) -> void`**
-    Records a structured event into the `event_log`. This is a general-purpose logging method used internally by the module to track ability-related occurrences.
+    Records a structured event into the `event_log` and, if an `event_bus` is present, pushes `{ "t": t, "data": {...} }` to the global bus for cross-module analysis.
 *   **`register_ability(id: String, data: Dictionary) -> void`**
     Adds a new ability definition to the `catalog`.
     *   `id`: A unique string identifier for the ability (e.g., "fireball", "heal").
@@ -88,10 +89,10 @@ abilities.tick_cooldowns()
 
 -   **External Systems Interaction:** Systems like `Loadouts` (which manage what abilities an actor has equipped) or UI hotbars should call `can_use()` before enabling an ability button or option. This ensures that players only see actionable abilities.
 -   **Data-Driven Design:** Ability data is externalized to `data/actions.json` and similar files. This is a crucial design choice that allows game designers to tweak ability costs, effects, and other parameters without requiring code changes or recompilation. This speeds up iteration and balancing.
--   **Event Logging for Analysis:** The `event_log` array is a powerful feature. Each entry is a structured dictionary (e.g., `{"t": "ability", "actor": actor, "id": id, "target": target}`). This log can be used for:
-    *   **Debugging:** Understanding the sequence of events that led to a particular game state.
-    *   **Analytics:** Collecting data on ability usage, effectiveness, and player behavior.
-    *   **Deterministic Replay:** Potentially replaying game sessions by re-executing events from the log, which is valuable for testing and competitive play analysis.
+-   **Event Logging for Analysis:** The module records each ability use in both the local `event_log` and, when configured, the global `EventBus`. Entries follow the `{ "t": String, "data": Dictionary }` convention.
+    *   **Debugging:** Understand the sequence of events that led to a particular game state.
+    *   **Analytics:** Collect data on ability usage, effectiveness, and player behavior.
+    *   **Deterministic Replay:** Replay game sessions by re-executing events from either log, which is valuable for testing and competitive play analysis.
 
 ## Testing
 

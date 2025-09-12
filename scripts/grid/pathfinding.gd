@@ -5,13 +5,14 @@
 # structure.  The service simply delegates to the map instance supplied at
 # construction time.
 extends Resource
-class_name GridPathfinding
+# Historically this script used `class_name` and `preload` which left
+# compiled script resources in memory after headless tests completed.
+# These explicit loads avoid the global class registry and opt out of
+# ResourceLoader caching so the script can be released cleanly.
 
-const LogicGridMap = preload("res://scripts/grid/grid_map.gd")
+var _map
 
-var _map: LogicGridMap
-
-func _init(map: LogicGridMap) -> void:
+func _init(map: Object) -> void:
     _map = map
 
 ## Find a path between two points on the grid.

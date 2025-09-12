@@ -36,6 +36,11 @@ var _dragging := false
 var _last_drag_rect_tiles: PackedVector2Array = PackedVector2Array()
 var _right_dragging := false
 var _press_offset := Vector2.ZERO
+var _path_actor: Object = null
+var _hover_tile := Vector2i(-1, -1)
+var _path_mark_tiles: PackedVector2Array = PackedVector2Array()
+
+@export var path_mark_color := Color(1.0, 0.9, 0.2, 0.9)
 
 func _ready() -> void:
     set_process_unhandled_input(true)
@@ -68,6 +73,60 @@ func _actor_at_tile(p: Vector2i):
         return _logic.get_actor_at(p)
     return null
 
+# Path preview ---------------------------------------------------------------
+
+## Set the actor used for path previews. The actor's current tile will be
+## used as the origin when generating hover paths.
+func set_path_preview_actor(actor: Object) -> void:
+    _path_actor = actor
+    _hover_tile = Vector2i(-1, -1)
+    _clear_path_marks()
+
+## Clear any existing path preview and detach the tracked actor.
+func clear_path_preview() -> void:
+    _path_actor = null
+    _hover_tile = Vector2i(-1, -1)
+    _clear_path_marks()
+
+func _clear_path_marks() -> void:
+    if _path_mark_tiles.is_empty():
+        return
+    if _vis and _vis.has_method("clear_mark"):
+        for v in _path_mark_tiles:
+            _vis.clear_mark(Vector2i(int(v.x), int(v.y)))
+    _path_mark_tiles = PackedVector2Array()
+
+func _preview_path_to(tile: Vector2i) -> void:
+    if _path_actor == null or _logic == null or _vis == null:
+        return
+    if not _tile_in_bounds(tile):
+        _clear_path_marks()
+        return
+    if tile == _hover_tile:
+        return
+    _hover_tile = tile
+    _clear_path_marks()
+
+    var start := Vector2i(-1, -1)
+    if _logic.has("actor_positions"):
+        start = _logic.actor_positions.get(_path_actor, Vector2i(-1, -1))
+    if start.x < 0:
+        return
+    var path: Array[Vector2i] = []
+    if _logic.has_method("find_path_for_actor"):
+        path = _logic.find_path_for_actor(_path_actor, start, tile)
+    elif _logic.has_method("find_path"):
+        path = _logic.find_path(start, Vector2i.RIGHT, tile, Vector2i.ONE)
+    if path.is_empty():
+        return
+    for i in range(1, path.size()):
+        var step: Vector2i = path[i]
+        var prev: Vector2i = path[i - 1]
+        var rot: float = Vector2(step - prev).angle()
+        if _vis.has_method("set_mark"):
+            _vis.set_mark(step, 0, path_mark_color, 1.0, rot)
+        _path_mark_tiles.push_back(step)
+
 # Input handling --------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -81,6 +140,8 @@ func _unhandled_input(event: InputEvent) -> void:
         _on_drag_motion(event)
     elif event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
         _on_right_drag_motion(event)
+    elif event is InputEventMouseMotion:
+        _on_hover_motion(event)
 
     elif event is InputEventMouseButton and not event.pressed:
         if event.button_index == MOUSE_BUTTON_LEFT:
@@ -95,6 +156,7 @@ func _on_left_press(ev: InputEventMouseButton) -> void:
     _press_tile = world_to_tile(_mouse_world())
     _dragging = false
     _clear_drag_preview()
+    _clear_path_marks()
 
 func _on_drag_motion(ev: InputEventMouseMotion) -> void:
     if _press_tile.x < 0:
@@ -104,6 +166,12 @@ func _on_drag_motion(ev: InputEventMouseMotion) -> void:
     if _dragging:
         var cur_tile := world_to_tile(_mouse_world())
         _preview_drag_rect(_press_tile, cur_tile)
+
+func _on_hover_motion(ev: InputEventMouseMotion) -> void:
+    if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+        return
+    var tile := world_to_tile(_mouse_world())
+    _preview_path_to(tile)
 
 func _on_left_release(ev: InputEventMouseButton) -> void:
     var mods := _mod_bits()

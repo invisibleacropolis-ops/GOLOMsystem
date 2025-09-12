@@ -1,15 +1,15 @@
-[gd_scene load_steps=11 format=3 uid="uid://bbfb5mia3p4xm"]
+[gd_scene load_steps=11 format=3]
 
-[ext_resource type="Script" uid="uid://bn0i15dnqnd66" path="res://scripts/game/battle_controller.gd" id="1"]
-[ext_resource type="Script" uid="uid://m2j4to6lsttp" path="res://scripts/modules/runtime_services.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/game/battle_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/modules/runtime_services.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/modules/GridRealtimeRenderer.tscn" id="3"]
-[ext_resource type="Script" uid="uid://cdwqwa1jd5u1e" path="res://scripts/grid/grid_interactor.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/grid/grid_interactor.gd" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/AbilityHotbar.tscn" id="6"]
-[ext_resource type="Script" uid="uid://cc2euntybi88k" path="res://scripts/ui/slice_debug.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/ui/slice_debug.gd" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/MainGUI.tscn" id="8"]
-[ext_resource type="Script" uid="uid://bnla8nmmo2iuu" path="res://scripts/integration/isometric_camera.gd" id="9"]
-[ext_resource type="Script" uid="uid://blj08ywngv3go" path="res://scripts/ui/error_overlay.gd" id="10"]
-[ext_resource type="Script" uid="uid://0vln7eqk3brf" path="res://scripts/tools/test_harness_node.gd" id="11"]
+[ext_resource type="Script" path="res://scripts/integration/isometric_camera.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/ui/error_overlay.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/tools/test_harness_node.gd" id="11"]
 
 [node name="VerticalSlice" type="Node2D"]
 
@@ -54,6 +54,9 @@ visible = false
 services_path = NodePath("../Runtime")
 controller_path = NodePath("../BattleController")
 
+[node path="MainGUI/Root/RightPane/TopTabs"]
+current_tab = 0
+
 [node name="SliceDebug" type="CanvasLayer" parent="."]
 script = ExtResource("7")
 renderer_path = NodePath("../GridRealtimeRenderer")
@@ -96,3 +99,4 @@ visible = false
 
 [node name="InGameTests" type="Node" parent="."]
 script = ExtResource("11")
+

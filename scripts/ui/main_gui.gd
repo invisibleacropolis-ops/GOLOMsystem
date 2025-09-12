@@ -1,6 +1,10 @@
 extends CanvasLayer
 class_name MainGUI
 
+## Primary HUD overlay for the vertical slice.
+## Displays logs, action buttons, and a Character tab that
+## mirrors stats and abilities from the active actor.
+
 @export var services_path: NodePath
 @export var controller_path: NodePath
 
@@ -14,6 +18,9 @@ class_name MainGUI
 @onready var left_pane: Control = $Root/LeftPane/EventLog/Body/MsgPane
 @onready var inspector: Panel = $Root/RightPane/Inspector
 @onready var log_menu: MenuButton = $Root/RightPane/OptionsMenu ## Dropdown for verbosity settings
+@onready var char_name: Label = $Root/RightPane/TopTabs/Characters/VBox/Name
+@onready var char_stats: RichTextLabel = $Root/RightPane/TopTabs/Characters/VBox/Stats
+@onready var char_abilities: RichTextLabel = $Root/RightPane/TopTabs/Characters/VBox/Abilities
 
 func _has_property(obj: Object, prop: String) -> bool:
     for p in obj.get_property_list():
@@ -55,6 +62,7 @@ func _ready() -> void:
     if inspector and inspector.has_node("VBox/Close"):
         inspector.get_node("VBox/Close").connect("pressed", func(): inspector.visible = false)
     # Toggle debug overlays handled via scene connection
+    call_deferred("_refresh_character_tab")
 
 func _on_msg_meta_clicked(meta):
     # Stub actions: route to help or trigger simple behaviors.
@@ -157,9 +165,53 @@ func _lock_heights() -> void:
     _sync_camera_buttons()
     _init_log_menu()
 
+## Populate the Character tab with the active actor's stats and abilities.
+func _refresh_character_tab() -> void:
+    if services == null:
+        return
+    var actor = null
+    if services.get("timespace") != null:
+        actor = services.timespace.get_current_actor()
+    if actor == null:
+        if char_name:
+            char_name.text = "No actor"
+        if char_stats:
+            char_stats.text = ""
+        if char_abilities:
+            char_abilities.text = ""
+        return
+    if char_name:
+        var fac = String(actor.get("faction"))
+        var nm = String(actor.get("name"))
+        char_name.text = ("%s (%s)" % [nm, fac]) if fac != "" else nm
+    if char_stats and services.get("timespace") != null:
+        var hp = int(actor.get("HLTH"))
+        var chi = int(actor.get("CHI"))
+        var ap = services.timespace.get_action_points(actor)
+        var pwr = int(actor.get("PWR"))
+        var spd = int(actor.get("SPD"))
+        var fcs = int(actor.get("FCS"))
+        var cap = int(actor.get("CAP"))
+        var per = int(actor.get("PER"))
+        char_stats.text = "HP:%d AP:%d CHI:%d\nPWR:%d SPD:%d FCS:%d CAP:%d PER:%d" % [hp, ap, chi, pwr, spd, fcs, cap, per]
+    if char_abilities:
+        var ids: Array = []
+        if services.get("loadouts") != null:
+            ids = services.loadouts.get_available(actor)
+        var names: Array[String] = []
+        if services.get("abilities") != null:
+            for id in ids:
+                var def = services.abilities.catalog.get(id, {})
+                names.append(String(def.get("name", id)))
+        else:
+            for id in ids:
+                names.append(String(id))
+        char_abilities.text = "Abilities:\n- " + "\n- ".join(names)
+
 func _on_event(evt: Dictionary) -> void:
     if event_log and event_log.has_method("append_entry"):
         event_log.append_entry(evt)
+    _refresh_character_tab()
 
 func _toggle_debug_overlays() -> void:
     var slice_dbg = get_tree().root.get_node_or_null("/root/VerticalSlice/SliceDebug")

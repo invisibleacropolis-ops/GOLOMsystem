@@ -24,7 +24,7 @@ func build(params: Dictionary) -> Dictionary:
     assert(params.has("tileset"), "MapGenerator requires a TileSet")
     assert(params.has("terrain_atlas"), "MapGenerator requires a terrain_atlas mapping")
 
-    var pgen := ProceduralMapGenerator.new()
+    var pgen: ProceduralMapGenerator = ProceduralMapGenerator.new()
     var logic_map = pgen.generate(params)
     pgen.free()
 
@@ -59,10 +59,10 @@ func build(params: Dictionary) -> Dictionary:
     bridge.build_from_tilemap()
 
     return {
-        "map": logic_map,
-        "grid_map": grid_map,
-        "renderer": renderer,
-        "bridge": bridge,
+    "map": logic_map,
+    "grid_map": grid_map,
+    "renderer": renderer,
+    "bridge": bridge,
     }
 
 ## Lightweight self-test for CI usage.
@@ -70,15 +70,15 @@ func run_tests() -> Dictionary:
     var failed := 0
     var total := 0
 
-    var gen = get_script().new()
+    var gen: MapGenerator = get_script().new()
     var tileset := TileSet.new()
     var params = {
-        "width": 2,
-        "height": 2,
-        "terrain_atlas": {},
-        "tileset": tileset,
+    "width": 2,
+    "height": 2,
+    "terrain_atlas": {},
+    "tileset": tileset,
     }
-    var result = gen.build(params)
+    var result: Dictionary = gen.build(params)
 
     total += 1
     if result.map.width != 2 or result.map.height != 2:

@@ -1,5 +1,6 @@
 extends Object
-class_name ConsoleCommands
+# `class_name` intentionally omitted to prevent lingering global class
+# registrations during automated headless tests.
 
 ## Whitelist-based command parser for the developer console.
 ##

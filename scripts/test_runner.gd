@@ -1,12 +1,23 @@
-extends SceneTree
-
 ## Simple headless test runner that invokes each module's
 ## `run_tests()` function and reports failures to stdout.
-
+extends SceneTree
 
 func _init() -> void:
-    get_root().name = "root"
-    var hub = get_root().get_node_or_null("ErrorHub")
+
+    # Defer execution until the SceneTree is fully initialized. Accessing
+    # absolute paths in `_init` triggers "outside the active scene tree"
+    # errors, so we schedule the test run for the next idle frame.
+    call_deferred("_run")
+
+
+func _run() -> void:
+    # Ensure the root node has a stable name to avoid empty-name warnings
+    # in headless runs.
+    if get_root().name == "":
+        get_root().name = "Root"
+
+    var hub = get_root().get_node_or_null("/root/ErrorHub")
+
     if hub:
         hub.call_deferred("info", "test_runner", "Starting module tests", {})
     var module_paths = {
@@ -25,8 +36,7 @@ func _init() -> void:
         "map_generator": "res://scripts/modules/map_generator.gd",
         "terrain": "res://scripts/modules/terrain.gd",
         "runtime_services": "res://scripts/modules/runtime_services.gd",
-        "console_commands": "res://scripts/tools/console_commands.gd",
-    }
+        "console_commands": "res://scripts/tools/console_commands.gd",    }
     var total := 0
     var failed := 0
     for name in module_paths.keys():
@@ -56,7 +66,7 @@ func _init() -> void:
             if hub:
                 hub.call_deferred("warn", "test_runner", "%s: no tests" % name, {})
         # Ensure we clean up the module instance and release the script resource
-        if mod is Node:
+        if not (mod is RefCounted):
             mod.free()
         mod = null
         script = null
@@ -65,7 +75,29 @@ func _init() -> void:
     if hub:
         var level2 = ("info" if failed == 0 else "error")
         hub.call_deferred(level2, "test_runner", summary, {"failed": failed, "total": total})
-    # Free autoload nodes to reduce resource leak warnings on exit.
-    for node in get_root().get_children():
-        node.free()
+
+
+    # Proactively cleanup autoload helpers to reduce exit-time leaks.
+    # Proactively free autoload singletons to reduce exit-time resource leaks.
+    var root := get_root()
+    var autoloads := [
+        "AsciiGateway",
+        "AsciiStreamServer",
+        "AsciiKeybinds",
+        "ErrorHub",
+        "ThemeBootstrap",
+        "EventTapLogger",
+        "LogConfig",
+    ]
+    for name in autoloads:
+        var n = root.get_node_or_null("/root/%s" % name)
+        if n:
+            if n.has_method("cleanup"):
+                n.cleanup()
+            n.queue_free()
+
+    # Allow a couple of frames so queued frees execute before exiting.
+    await process_frame
+    await process_frame
+
     quit(failed)

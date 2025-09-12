@@ -3,13 +3,12 @@
 # External tools can use this module to query visibility without touching
 # the map's internal state directly.
 extends Resource
-class_name GridLOS
+# Avoid global class registration and cached preloads so this helper
+# can be released without leaving lingering script resources.
 
-const LogicGridMap = preload("res://scripts/grid/grid_map.gd")
+var _map
 
-var _map: LogicGridMap
-
-func _init(map: LogicGridMap) -> void:
+func _init(map: Object) -> void:
     _map = map
 
 ## Mark or clear a tile as blocking line of sight.

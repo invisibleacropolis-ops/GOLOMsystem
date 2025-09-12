@@ -45,8 +45,8 @@ func run_all() -> Dictionary:
                 lines.append(String(result.log))
         else:
             lines.append("%s: no tests" % name)
-        if mod is Node:
-            mod.queue_free()
+        if not (mod is RefCounted):
+            mod.free()
         mod = null
         script = null
     var dbg = get_tree().get_root().get_node_or_null("/root/WorkspaceDebugger")

@@ -28,6 +28,7 @@ var TERRAIN_TO_ATLAS: Dictionary = {
     "road": Vector2i(1, 0),
     "hill": Vector2i(0, 0),
     "mountain": Vector2i(0, 0),
+    "forest": Vector2i(3, 0),
 }
 
 func _ready() -> void:

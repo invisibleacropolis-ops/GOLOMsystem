@@ -5,18 +5,37 @@ class_name GridLogic
 # services like pathfinding, line-of-sight, and terrain metadata.  The
 # facade exposes the same public API as the old `LogicGridMap` so existing
 # callers require minimal changes.
+#
+# Scripts are loaded dynamically with cache ignore so headless tests can
+# release them cleanly without polluting the global cache.
 
-const Grid = preload("res://scripts/grid/grid.gd")
-const BaseActor = preload("res://scripts/core/base_actor.gd")
-const ProceduralWorld = preload("res://scripts/modules/procedural_world.gd")
-const Logging = preload("res://scripts/core/logging.gd")
+var _GridScript = ResourceLoader.load(
+    "res://scripts/grid/grid.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
+var _BaseActorScript = ResourceLoader.load(
+    "res://scripts/core/base_actor.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
+var _ProceduralWorldScript = ResourceLoader.load(
+    "res://scripts/modules/procedural_world.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
+var _LoggingScript = ResourceLoader.load(
+    "res://scripts/core/logging.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
 
-@export var map: Grid = Grid.new()
+@export var map = _GridScript.new()
 var event_log: Array = []
 
 ## Record structured events for debugging and tests.
 func log_event(t: String, actor: Object = null, pos = null, data = null) -> void:
-    Logging.log(event_log, t, actor, pos, data)
+    _LoggingScript.log(event_log, t, actor, pos, data)
 
 func has_actor_at(pos: Vector2i) -> bool:
     return map.is_occupied(pos)
@@ -27,7 +46,7 @@ func get_actor_at(pos: Vector2i):
 ## Generate a procedural world map using noise-based biomes and replace the
 ## current `map` with the result. Colors are returned for visualization.
 func generate_world(width: int, height: int, seed: int = 0) -> Array[Color]:
-    var gen := ProceduralWorld.new()
+    var gen := _ProceduralWorldScript.new()
     var result := gen.generate(width, height, seed)
     map = result.map
     log_event("world_generated", null, null, {"width": width, "height": height})
@@ -50,7 +69,7 @@ func run_tests() -> Dictionary:
 
     map.width = 4
     map.height = 4
-    var actor := BaseActor.new("ogre", Vector2i.ZERO, Vector2i.RIGHT, Vector2i(2,2))
+    var actor := _BaseActorScript.new("ogre", Vector2i.ZERO, Vector2i.RIGHT, Vector2i(2,2))
     map.move_actor(actor, Vector2i.ZERO)
 
     total += 1
@@ -65,7 +84,7 @@ func run_tests() -> Dictionary:
         logs.append("movement allowed onto impassable tile")
 
     # Pathfinding regression
-    var path := map.find_path_for_actor(actor, Vector2i.ZERO, Vector2i(2,2))
+    var path: Array[Vector2i] = map.find_path_for_actor(actor, Vector2i.ZERO, Vector2i(2,2))
     total += 1
     if path.is_empty() or path[-1] != Vector2i(2,2):
         failed += 1
@@ -102,3 +121,9 @@ func run_tests() -> Dictionary:
         "total": total,
         "log": "\n".join(logs),
     }
+
+func _exit_tree() -> void:
+    _GridScript = null
+    _BaseActorScript = null
+    _ProceduralWorldScript = null
+    _LoggingScript = null

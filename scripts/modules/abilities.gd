@@ -7,6 +7,7 @@ class DummyActor:
 
 
 const Logging = preload("res://scripts/core/logging.gd")
+const CombatRules = preload("res://scripts/game/combat_rules.gd")
 
 ## Validates requirements and executes ordered effect lists.
 ## This stub only tracks ability registration and logs execution
@@ -15,6 +16,8 @@ const Logging = preload("res://scripts/core/logging.gd")
 var catalog: Dictionary = {}
 var cooldowns: Dictionary = {}
 var event_log: Array = []
+## Optional reference to the shared EventBus for cross-module logs
+var event_bus: Node = null
 
 ## Emitted whenever an ability reduces a target's HP.
 ## @param attacker Ability user
@@ -25,6 +28,19 @@ signal damage_applied(attacker, defender, amount)
 
 func log_event(t: String, actor: Object = null, pos = null, data = null) -> void:
 	Logging.log(event_log, t, actor, pos, data)
+	if event_bus != null:
+		var payload: Dictionary = {}
+		if actor != null:
+			payload["actor"] = actor
+		if pos != null:
+			payload["pos"] = pos
+		if data != null:
+			if typeof(data) == TYPE_DICTIONARY:
+				for k in data.keys():
+					payload[k] = data[k]
+			else:
+				payload["value"] = data
+		event_bus.push({"t": t, "data": payload})
 
 
 func register_ability(id: String, data: Dictionary) -> void:
@@ -63,7 +79,10 @@ func can_use(actor: Object, id: String, attrs = null) -> bool:
 	return true
 
 
-func execute(actor: Object, id: String, target, attrs = null) -> Array:
+## Execute ability `id` from `actor` against `target`.
+## Optionally accepts attribute data and the current grid map for
+## advanced damage computation.
+func execute(actor: Object, id: String, target, attrs = null, grid_map = null) -> Array:
 	if not can_use(actor, id, attrs):
 		return []
 	var def = catalog[id]
@@ -76,13 +95,22 @@ func execute(actor: Object, id: String, target, attrs = null) -> Array:
 	log_event("ability", actor, null, {"id": id, "target": target})
 	for effect in def.get("effects", []):
 		if effect == "damage" and target != null:
-			# Allow targets with custom logic to handle their own damage
-			# resolution before falling back to a raw `HLTH` property.
+			# Legacy branch for simple flat damage abilities.
 			if target.has_method("apply_damage"):
 				target.apply_damage(1)
 			elif target.get("HLTH") != null:
 				target.HLTH = max(0, target.HLTH - 1)
 			emit_signal("damage_applied", actor, target, 1)
+		elif effect == "deal_damage" and target != null:
+			var dmg: int = int(def.get("damage_amount", 0))
+			if CombatRules and grid_map != null:
+				var base := CombatRules.compute_damage(actor, target, grid_map)
+				dmg = base * def.get("damage_amount", 1)
+			if target.has_method("apply_damage"):
+				target.apply_damage(dmg)
+			elif target.get("HLTH") != null:
+				target.HLTH = max(0, target.HLTH - dmg)
+			emit_signal("damage_applied", actor, target, dmg)
 	return def.get("follow_up", [])
 
 
@@ -97,6 +125,11 @@ func run_tests() -> Dictionary:
 	var attrs = attrs_script.new()
 	attrs.set_base(attacker, "ACT", 2)
 	attrs.set_base(attacker, "CHI", 2)
+	var bus_script := ResourceLoader.load(
+		"res://scripts/modules/event_bus.gd", "", ResourceLoader.CacheMode.CACHE_MODE_IGNORE
+	)
+	var bus = bus_script.new()
+	event_bus = bus
 	var dmg_calls := []
 	damage_applied.connect(func(a, d, amt): dmg_calls.append(amt))
 	var follow = execute(attacker, "strike", target, attrs)
@@ -110,13 +143,21 @@ func run_tests() -> Dictionary:
 		and evt.get("actor") == attacker
 		and evt.get("data", {}).get("id") == "strike"
 	)
+	var bus_evt = bus.entries[0]
+	var bus_structured = (
+		bus_evt.get("t", "") == "ability"
+		and bus_evt.get("data", {}).get("actor") == attacker
+		and bus_evt.get("data", {}).get("id") == "strike"
+	)
 	# Clean up test instances to avoid resource leaks in headless runs
 	attrs.free()
 	attrs = null
 	attrs_script = null
+	bus.free()
+	event_bus = null
 	return {
 		"failed":
-		0 if (follow.has("combo_finish") and on_cd and cd_ready and structured and hp_down) else 1,
+		0 if (follow.has("combo_finish") and on_cd and cd_ready and structured and bus_structured and hp_down) else 1,
 		"total": 1,
 		"log": "json load & cooldown",
 	}

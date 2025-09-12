@@ -50,8 +50,16 @@ signal tests_completed(result)
 ## polling the log array.
 signal event_logged(evt)
 
-const Logging = preload("res://scripts/core/logging.gd")
-const ConsoleCommands = preload("res://scripts/tools/console_commands.gd")
+var Logging = ResourceLoader.load(
+    "res://scripts/core/logging.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
+var ConsoleCommands = ResourceLoader.load(
+    "res://scripts/tools/console_commands.gd",
+    "",
+    ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+)
 
 func log_event(t: String, actor: Object = null, pos = null, data = null) -> void:
         # Build the event dictionary for both internal storage and any
@@ -544,3 +552,7 @@ func _save_config() -> void:
     cfg.set_value("workspace", "interval", interval_spin.value)
     cfg.set_value("workspace", "modules", modules)
     cfg.save(CONFIG_PATH)
+
+func _exit_tree() -> void:
+    Logging = null
+    ConsoleCommands = null

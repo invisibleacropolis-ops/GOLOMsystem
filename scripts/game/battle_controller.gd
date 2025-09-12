@@ -4,6 +4,8 @@ class_name BattleController
 ## Wires RuntimeServices, GridRealtimeRenderer, GridInteractor, and BattleHUD
 ## to provide basic selection, movement, and End Turn flow for the vertical slice.
 
+const Archetypes = preload("res://scripts/game/archetypes.gd")
+
 @export var services_path: NodePath
 @export var renderer_path: NodePath
 @export var interactor_path: NodePath
@@ -27,15 +29,24 @@ var _t2g_bridge: Node = null
 var _gridmap3d: GridMap = null
 var _actor_proxies: Dictionary = {}
 var _last_positions: Dictionary = {}
+var _archetypes := Archetypes.new()
+
+const SimpleEnemyAI = preload("res://scripts/ai/simple_enemy_ai.gd")
+var enemy_ai: SimpleEnemyAI = null # Stateless helper for enemy decision-making
+
 
 func _ready() -> void:
     _assert_wiring()
     _setup_grid()
+    _archetypes.load_from_file("res://data/archetypes.json")
     _spawn_demo_squads()
     _connect_signals()
+    enemy_ai = SimpleEnemyAI.new(services) # Wire runtime services into AI module
+    add_child(enemy_ai)
     # Announce battle start before the first round
     if services and services.event_bus:
-        services.event_bus.push({"t": "battle_begins"})
+        # Push a standardized event dictionary to the EventBus
+        services.event_bus.push({"t": "battle_begins", "data": {}})
     services.timespace.start_round()
 
 func _assert_wiring() -> void:
@@ -48,10 +59,14 @@ func _setup_grid() -> void:
     # Build a 32x32 world using MapGenerator -> TileToGridmap addon.
     var MapGen = preload("res://scripts/modules/map_generator.gd")
     var tileset: TileSet = null
-    if ResourceLoader.exists("res://addons/tile_to_gridmap/example/tilemaps/example_terrain.tres"):
+    # The example TileSet depends on imported textures that may be absent
+    # when the project is run headless.  Verify the import file exists
+    # before attempting to load to avoid runtime errors.
+    if FileAccess.file_exists("res://addons/tile_to_gridmap/example/tilemaps/terrain512_dg.png.import"):
         tileset = load("res://addons/tile_to_gridmap/example/tilemaps/example_terrain.tres")
     var meshlib: MeshLibrary = null
-    if ResourceLoader.exists("res://addons/tile_to_gridmap/example/gridmaps/scenes/library/dg_mesh_lib.tres"):
+    # Likewise ensure the mesh library's texture has been imported.
+    if FileAccess.file_exists("res://addons/tile_to_gridmap/example/gridmaps/meshes/dualgridterrain_0.png.import"):
         meshlib = load("res://addons/tile_to_gridmap/example/gridmaps/scenes/library/dg_mesh_lib.tres")
 
     # Map LogicGridMap terrain tags -> TileSet atlas coordinates used by T2GTerrainLayer
@@ -177,6 +192,11 @@ func _spawn_demo_squads() -> void:
     enemy.runtime = services
     npc.runtime = services
 
+    # Apply archetype definitions for base stats and abilities
+    _archetypes.apply(player, "test_player", services.attributes, services.loadouts)
+    _archetypes.apply(enemy, "test_enemy", services.attributes, services.loadouts)
+    _archetypes.apply(npc, "test_npc", services.attributes, services.loadouts)
+
     # Add to scene tree and ASCII group for renderer collection
     add_child(player)
     add_child(enemy)
@@ -189,10 +209,6 @@ func _spawn_demo_squads() -> void:
     services.timespace.add_actor(player, player.INIT, player.ACT, player.grid_pos)
     services.timespace.add_actor(enemy, enemy.INIT, enemy.ACT, enemy.grid_pos)
     services.timespace.add_actor(npc, npc.INIT, npc.ACT, npc.grid_pos)
-
-    # Grant basic abilities for the player hotbar
-    services.loadouts.grant(player, "attack_basic")
-    services.loadouts.grant(player, "overwatch")
     # Proxies
     _ensure_actor_proxy(player)
     _ensure_actor_proxy(enemy)
@@ -204,8 +220,11 @@ func _connect_signals() -> void:
     services.timespace.turn_ended.connect(_on_turn_ended)
     services.timespace.battle_over.connect(_on_battle_over)
     interactor.tile_clicked.connect(_on_tile_clicked)
-    if hud and hud.has_signal("end_turn_requested"):
-        hud.end_turn_requested.connect(_on_end_turn_pressed)
+    if hud:
+        if hud.has_signal("end_turn_requested"):
+            hud.end_turn_requested.connect(_on_end_turn_pressed)
+        if hud.has_signal("attack_requested"):
+            hud.attack_requested.connect(_enter_attack_mode)
     if hotbar and hotbar.has_method("set_attack_handler"):
         hotbar.set_attack_handler(Callable(self, "_enter_attack_mode"))
 
@@ -215,12 +234,15 @@ func _on_turn_started(actor: Object) -> void:
     _update_hud()
     _paint_board()
     _update_hotbar()
+    if interactor and interactor.has_method("set_path_preview_actor"):
+        interactor.set_path_preview_actor(actor)
     # Enable auto-resolution when no players remain; otherwise
     # non-player factions still act autonomously.
     _auto_resolve = not _any_players_alive()
     var faction = String(actor.get("faction"))
     if faction != "player" or _auto_resolve:
-        _take_auto_turn(actor)
+        if enemy_ai:
+            enemy_ai.take_turn(actor) # Delegate non-player turns to AI
 
 func _on_turn_ended(actor: Object) -> void:
     _clear_selection()
@@ -230,6 +252,8 @@ func _on_ap_changed(actor: Object, _old: int, _new: int) -> void:
         _update_hud()
         _paint_board()
         _update_hotbar()
+        if interactor and interactor.has_method("set_path_preview_actor"):
+            interactor.set_path_preview_actor(actor)
 
 func _on_battle_over(faction) -> void:
     if hud and hud.has_method("show_outcome"):
@@ -252,22 +276,36 @@ func _on_tile_clicked(tile: Vector2i, button: int, _mods: int) -> void:
         var target = services.grid_map.get_actor_at(tile)
         if target and target != selected_actor:
             var t_fac = String(target.get("faction"))
-            if t_fac == "enemy" and _is_target(tile) and services.timespace.can_perform(selected_actor, "attack", target):
-                services.timespace.perform(selected_actor, "attack", target)
-                attack_mode = false
-                _update_hud()
-                _paint_board()
+            if t_fac == "enemy" and _is_target(tile):
+                if hud and hud.has_method("set_target"):
+                    hud.set_target(target)
                 return
+
+            # Verify the target is hostile, highlighted as a valid LOS target, and
+            # still visible from the actor's current position before executing the attack.
+            if t_fac == "enemy" and _is_target(tile):
+                var a_pos: Vector2i = services.grid_map.actor_positions.get(selected_actor, null)
+                if a_pos != null and services.grid_map.has_line_of_sight(a_pos, tile) and services.timespace.can_perform(selected_actor, "attack", target):
+                    services.timespace.perform(selected_actor, "attack", target)
+                    attack_mode = false
+                    _update_hud()
+                    _paint_board()
+                    return
+
     # Otherwise move along a shortest path if within AP budget (step-by-step performs)
     if _is_reachable(tile):
         _step_move_to(selected_actor, tile)
         _update_hud()
         _paint_board()
+        if interactor and interactor.has_method("set_path_preview_actor"):
+            interactor.set_path_preview_actor(selected_actor)
 
 func _clear_selection() -> void:
     reachable.clear()
     if vis.has_method("clear_all"):
         vis.clear_all()
+    if interactor and interactor.has_method("clear_path_preview"):
+        interactor.clear_path_preview()
 
 func _ensure_actor_proxy(a) -> void:
     if _gridmap3d == null:
@@ -289,7 +327,13 @@ func _ensure_actor_proxy(a) -> void:
     _last_positions[a] = a.get("grid_pos") if a.has_method("get") else Vector2i.ZERO
 
 func _on_action_performed(actor: Object, id: String, payload) -> void:
-    if id == "move" and _actor_proxies.has(actor):
+    if id == "attack" and actor == selected_actor:
+        attack_mode = false
+        if hud and hud.has_method("set_target"):
+            hud.set_target(null)
+        _update_hud()
+        _paint_board()
+    elif id == "move" and _actor_proxies.has(actor):
         var prev: Vector2i = _last_positions.get(actor, actor.get("grid_pos"))
         var dst: Vector2i = payload if typeof(payload) == TYPE_VECTOR2I else prev
         var delta := dst - prev
@@ -413,6 +457,13 @@ func _is_reachable(tile: Vector2i) -> bool:
     return false
 
 func _compute_los_targets(from_pos: Vector2i) -> Array[Vector2i]:
+    """Return enemy tile positions visible from ``from_pos``.
+
+    The filter uses ``grid_map.has_line_of_sight`` so callers receive only
+    targets that can currently be attacked. This guards against stale
+    previews when terrain or unit positions change between highlight and
+    confirmation clicks.
+    """
     var out: Array[Vector2i] = []
     for other in services.grid_map.get_all_actors():
         if other == null or other == selected_actor:
@@ -443,6 +494,10 @@ func _update_hud() -> void:
     var ap = services.timespace.get_action_points(selected_actor)
     if hud and hud.has_method("set_status"):
         hud.set_status(name, hp, ap)
+    if hud and hud.has_method("set_actor"):
+        if hud.get("services_path") == NodePath(""):
+            hud.services_path = services.get_path()
+        hud.set_actor(selected_actor)
     _update_hotbar()
 
 func _update_hotbar() -> void:
@@ -452,93 +507,52 @@ func _update_hotbar() -> void:
 
 func _enter_attack_mode() -> void:
     attack_mode = true
+    if hud and hud.has_method("set_target"):
+        hud.set_target(null)
     _paint_board()
 
+## Move the actor toward `dst` consuming action points for each step.
+##
+## Path cost mirrors the reachability calculation, considering movement
+## cost, diagonal and turn penalties, as well as climb effort. Movement
+## stops when AP is exhausted or an intermediate step fails.
 func _step_move_to(actor: Object, dst: Vector2i) -> void:
-    # Follow a shortest path, performing one-tile moves up to AP budget
+    # Follow a shortest path, performing one-tile moves while deducting AP
     var start = services.grid_map.actor_positions.get(actor, null)
     if start == null:
         return
     var path: Array[Vector2i] = services.grid_map.find_path_for_actor(actor, start, dst)
     if path.is_empty():
         return
-    # First element is the start; iterate subsequent steps
-    var ap = services.timespace.get_action_points(actor)
+    var ap := float(services.timespace.get_action_points(actor))
     for i in range(1, path.size()):
-        if ap <= 0:
+        if ap <= 0.0:
             break
         var step: Vector2i = path[i]
+        var prev: Vector2i = path[i - 1]
+        var cost: float = services.grid_map.get_movement_cost(step)
+        if step.x != prev.x and step.y != prev.y:
+            cost *= 1.4
+        var hdiff = services.grid_map.get_height(step) - services.grid_map.get_height(prev)
+        if hdiff > int(services.grid_map.get("MAX_CLIMB_HEIGHT")):
+            break
+        if hdiff > 0:
+            cost += float(services.grid_map.get("CLIMB_COST")) * float(hdiff)
+        if i >= 2:
+            var prev_dir = Vector2i(Vector2(path[i-1] - path[i-2]).normalized().round())
+            var next_dir = Vector2i(Vector2(step - prev).normalized().round())
+            if next_dir != prev_dir:
+                cost += float(services.grid_map.get("TURN_COST"))
+        if cost - 1e-6 > ap:
+            break
         if not services.timespace.can_perform(actor, "move", step):
             break
         if not services.timespace.perform(actor, "move", step):
             break
-        ap -= 1
-
-func _take_auto_turn(actor: Object) -> void:
-    var a_pos = services.grid_map.actor_positions.get(actor, null)
-    if a_pos == null:
-        services.timespace.end_turn(); return
-    var my_fac := String(actor.get("faction")) if actor.has_method("get") else ""
-    var target = _nearest_opponent(a_pos, my_fac)
-    if target == null:
-        # No opponents: consider overwatch to hold ground
-        if services.timespace.can_perform(actor, "overwatch", null):
-            services.timespace.perform(actor, "overwatch", null)
-        services.timespace.end_turn(); return
-    var t_pos = services.grid_map.actor_positions.get(target, null)
-    if t_pos == null:
-        services.timespace.end_turn(); return
-    # Simple flee heuristic at low HP
-    var hp := int(actor.get("HLTH")) if actor.has_method("get") else 1
-    if hp <= 1:
-        var away := _step_away(a_pos, t_pos)
-        if away != a_pos and services.timespace.can_perform(actor, "move", away):
-            services.timespace.perform(actor, "move", away)
-            services.timespace.end_turn(); return
-    # Attack if LOS else step toward target; otherwise overwatch.
-    if services.grid_map.has_line_of_sight(a_pos, t_pos) and services.timespace.can_perform(actor, "attack", target):
-        services.timespace.perform(actor, "attack", target)
-    else:
-        var path: Array[Vector2i] = services.grid_map.find_path_for_actor(actor, a_pos, t_pos)
-        if path.size() >= 2:
-            var next_step: Vector2i = path[1]
-            if services.timespace.can_perform(actor, "move", next_step):
-                services.timespace.perform(actor, "move", next_step)
-        elif services.timespace.can_perform(actor, "overwatch", null):
-            services.timespace.perform(actor, "overwatch", null)
-    services.timespace.end_turn()
-
-func _nearest_opponent(from_pos: Vector2i, my_fac: String):
-    var best = null
-    var best_d = 1_000_000
-    for other in services.grid_map.get_all_actors():
-        if other == null:
-            continue
-        var fac = String(other.get("faction")) if other.has_method("get") else ""
-        if fac == my_fac:
-            continue
-        if int(other.get("HLTH")) <= 0:
-            continue
-        var p = services.grid_map.actor_positions.get(other, null)
-        if p == null:
-            continue
-        var d = services.grid_map.get_chebyshev_distance(from_pos, p)
-        if d < best_d:
-            best_d = d
-            best = other
-    return best
+        ap -= cost
 
 func _any_players_alive() -> bool:
     for a in services.grid_map.get_all_actors():
         if a and String(a.get("faction")) == "player" and int(a.get("HLTH")) > 0:
             return true
     return false
-
-func _step_away(from_pos: Vector2i, threat_pos: Vector2i) -> Vector2i:
-    var dx = sign(from_pos.x - threat_pos.x)
-    var dy = sign(from_pos.y - threat_pos.y)
-    var candidates = [Vector2i(from_pos.x + dx, from_pos.y), Vector2i(from_pos.x, from_pos.y + dy), Vector2i(from_pos.x + dx, from_pos.y + dy)]
-    for c in candidates:
-        if services.grid_map.is_in_bounds(c) and not services.grid_map.is_occupied(c):
-            return c
-    return from_pos

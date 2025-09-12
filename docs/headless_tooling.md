@@ -15,6 +15,7 @@ Before running the headless tools, you need to configure the path to your Godot 
     *   Alternatively, you can set environment variables: `GODOT4_WIN_EXE`, `GODOT4_LINUX_EXE`, and `GODOT4_MODE` (set to `auto`, `wsl`, or `win`). These will override settings in `godot4-config.json`.
 *   **Optional Bash/WSL Environment:**
     *   For bash/WSL users, copy `scripts/godot4.env.example` to `scripts/godot4.env` and edit it to configure environment-specific settings.
+*   **Auto-detect:** If a `godot4` executable is available on your `PATH`, the wrapper scripts will use it automatically without additional configuration.
 
 ## Unified Runner (`godot4`)
 
@@ -47,7 +48,10 @@ These scripts automate common development tasks in a headless environment.
 
 *   **Script:** `pwsh -File scripts/run_headless.ps1 -Strict`
 *   **Purpose:** This script runs the full suite of module tests and then initiates an ASCII smoke test of the game. It's designed for CI environments to quickly verify core functionality.
-*   **How it works:** It calls `scripts/test_runner.gd` to execute all module tests. If successful, it then launches the game in headless ASCII mode, leveraging the `GridRealtimeRenderer` to output the game state to the console. It also writes logs to the `logs/` directory.
+*   **How it works:** It calls `scripts/test_runner.gd` to execute all module tests. If successful, it then launches the game in headless ASCII mode, leveraging the `GridRealtimeRenderer` to output the game state to the console. Verbose engine output and StringName leak diagnostics are captured via `--debug-stringnames` in paired log files:
+    * `logs/headless_tests.log` and `logs/headless_engine.log`
+    * `logs/ascii_smoke.log` and `logs/ascii_smoke_engine.log`
+  These logs provide additional context for troubleshooting headless runs.
 
 ### ASCII Play
 

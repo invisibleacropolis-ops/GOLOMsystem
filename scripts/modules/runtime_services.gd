@@ -27,23 +27,56 @@ var event_bus
 
 func _init() -> void:
     # Load scripts at runtime to avoid static preload failures.
-    _LogicGridMapScript = load("res://scripts/grid/grid_map.gd")
-    _TurnTimespaceScript = load("res://scripts/modules/turn_timespace.gd")
-    _AttributesScript = load("res://scripts/modules/attributes.gd")
-    _StatusesScript = load("res://scripts/modules/statuses.gd")
-    _AbilitiesScript = load("res://scripts/modules/abilities.gd")
-    _LoadoutsScript = load("res://scripts/modules/loadouts.gd")
-    _ReactionsScript = load("res://scripts/modules/reactions.gd")
-    _EventBusScript = load("res://scripts/modules/event_bus.gd")
+    _LogicGridMapScript = ResourceLoader.load(
+        "res://scripts/grid/grid_map.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _TurnTimespaceScript = ResourceLoader.load(
+        "res://scripts/modules/turn_timespace.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _AttributesScript = ResourceLoader.load(
+        "res://scripts/modules/attributes.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _StatusesScript = ResourceLoader.load(
+        "res://scripts/modules/statuses.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _AbilitiesScript = ResourceLoader.load(
+        "res://scripts/modules/abilities.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _LoadoutsScript = ResourceLoader.load(
+        "res://scripts/modules/loadouts.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _ReactionsScript = ResourceLoader.load(
+        "res://scripts/modules/reactions.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
+    _EventBusScript = ResourceLoader.load(
+        "res://scripts/modules/event_bus.gd",
+        "",
+        ResourceLoader.CacheMode.CACHE_MODE_IGNORE,
+    )
 
     grid_map = _LogicGridMapScript.new()
-    timespace = _TurnTimespaceScript.new()
-    attributes = _AttributesScript.new()
-    statuses = _StatusesScript.new()
-    abilities = _AbilitiesScript.new()
-    loadouts = _LoadoutsScript.new()
-    reactions = _ReactionsScript.new()
-    event_bus = _EventBusScript.new()
+    timespace = _TurnTimespaceScript.new(); timespace.name = "TurnTimespace"
+    attributes = _AttributesScript.new(); attributes.name = "Attributes"
+    statuses = _StatusesScript.new(); statuses.name = "Statuses"
+    abilities = _AbilitiesScript.new(); abilities.name = "Abilities"
+    loadouts = _LoadoutsScript.new(); loadouts.name = "Loadouts"
+    reactions = _ReactionsScript.new(); reactions.name = "Reactions"
+    event_bus = _EventBusScript.new(); event_bus.name = "EventBus"
+    abilities.event_bus = event_bus
     # Timespace requires a grid map for movement.
     timespace.set_grid_map(grid_map)
 
@@ -56,13 +89,16 @@ func _ready() -> void:
     if loadouts: loadouts.name = "Loadouts"
     if reactions: reactions.name = "Reactions"
     if event_bus: event_bus.name = "EventBus"
-    if timespace: add_child(timespace)
-    if attributes: add_child(attributes)
-    if statuses: add_child(statuses)
-    if abilities: add_child(abilities)
-    if loadouts: add_child(loadouts)
-    if reactions: add_child(reactions)
-    if event_bus: add_child(event_bus)
+
+    add_child(grid_map)
+    add_child(timespace)
+    add_child(attributes)
+    add_child(statuses)
+    add_child(abilities)
+    add_child(loadouts)
+    add_child(reactions)
+    add_child(event_bus)
+
     statuses.set_attributes_service(attributes)
     abilities.load_from_file("res://data/actions.json")
     timespace.register_reaction_watcher(func(actor, action_id, payload):
@@ -93,6 +129,8 @@ func run_tests() -> Dictionary:
     grid_map.width = 2
     grid_map.height = 2
     var actor = Node.new()
+    # Name the temporary actor to avoid empty-name warnings when events are logged.
+    actor.name = "TestActor"
     timespace.add_actor(actor, 5, 1, Vector2i.ZERO)
     timespace.start_round()
     var moved = timespace.move_current_actor(Vector2i(1, 0))
@@ -144,10 +182,48 @@ func run_tests() -> Dictionary:
     for m in modules:
         m.free()
     timespace.free()
+    if grid_map:
+        grid_map.free()
     grid_map = null
+    p.free()
+    e.free()
+    gm_vs.free()
+    ts_vs.free()
+    attributes = null
+    statuses = null
+    abilities = null
+    loadouts = null
+    reactions = null
+    event_bus = null
+    _LogicGridMapScript = null
+    _TurnTimespaceScript = null
+    _AttributesScript = null
+    _StatusesScript = null
+    _AbilitiesScript = null
+    _LoadoutsScript = null
+    _ReactionsScript = null
+    _EventBusScript = null
 
     return {
         "failed": failures,
         "total": total,
         "log": "\n".join(log),
     }
+
+func _exit_tree() -> void:
+    grid_map = null
+    timespace = null
+    attributes = null
+    statuses = null
+    abilities = null
+    loadouts = null
+    reactions = null
+    event_bus = null
+    _LogicGridMapScript = null
+    _TurnTimespaceScript = null
+    _AttributesScript = null
+    _StatusesScript = null
+    _AbilitiesScript = null
+    _LoadoutsScript = null
+    _ReactionsScript = null
+    _EventBusScript = null

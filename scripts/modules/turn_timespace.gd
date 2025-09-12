@@ -549,8 +549,8 @@ func run_tests() -> Dictionary:
 	## Initiative order & tiebreaks
 	var ts1: TurnBasedGridTimespace = get_script().new()
 	ts1.set_grid_map(GRID_MAP_RES.new())
-	var a1 := Node.new()
-	var b1 := Node.new()
+	var a1 := Node.new(); a1.name = "A1"
+	var b1 := Node.new(); b1.name = "B1"
 	ts1.add_actor(a1, 5, 1)
 	ts1.add_actor(b1, 5, 1)
 	ts1.start_round()
@@ -559,8 +559,8 @@ func run_tests() -> Dictionary:
 	var ts2: TurnBasedGridTimespace = get_script().new()
 	ts2._rng.seed = 1
 	ts2.set_grid_map(GRID_MAP_RES.new())
-	var a2 := Node.new()
-	var b2 := Node.new()
+	var a2 := Node.new(); a2.name = "A2"
+	var b2 := Node.new(); b2.name = "B2"
 	ts2.add_actor(a2, 5, 1)
 	ts2.add_actor(b2, 5, 1)
 	ts2.start_round()
@@ -572,8 +572,8 @@ func run_tests() -> Dictionary:
 	var ts3: TurnBasedGridTimespace = get_script().new()
 	ts3._rng.seed = 3
 	ts3.set_grid_map(GRID_MAP_RES.new())
-	var a3 := Node.new()
-	var b3 := Node.new()
+	var a3 := Node.new(); a3.name = "A3"
+	var b3 := Node.new(); b3.name = "B3"
 	ts3.add_actor(a3, 5, 1)
 	ts3.add_actor(b3, 5, 1)
 	ts3.start_round()
@@ -598,7 +598,7 @@ func run_tests() -> Dictionary:
 	## AP spend & rejection
 	var ts_ap: TurnBasedGridTimespace = get_script().new()
 	ts_ap.set_grid_map(GRID_MAP_RES.new())
-	var ap_actor := Node.new()
+	var ap_actor := Node.new(); ap_actor.name = "APActor"
 	ts_ap.add_actor(ap_actor, 5, 1)
 	ts_ap.start_round()
 	var ap_changes := []
@@ -642,8 +642,8 @@ func run_tests() -> Dictionary:
 	var ts_ow: TurnBasedGridTimespace = get_script().new()
 	var grid2: Resource = GRID_MAP_RES.new()
 	ts_ow.set_grid_map(grid2)
-	var mover := Node.new()
-	var watcher := Node.new()
+	var mover := Node.new(); mover.name = "Mover"
+	var watcher := Node.new(); watcher.name = "Watcher"
 	ts_ow.add_actor(watcher, 1, 1, Vector2i.ZERO)
 	ts_ow.add_actor(mover, 10, 2, Vector2i(3, 0))
 	ts_ow.add_overwatcher(watcher, true)
@@ -684,7 +684,7 @@ func run_tests() -> Dictionary:
 	## Status durations
 	var ts_status: TurnBasedGridTimespace = get_script().new()
 	ts_status.set_grid_map(GRID_MAP_RES.new())
-	var act := Node.new()
+	var act := Node.new(); act.name = "Act"
 	ts_status.add_actor(act, 5, 1)
 	ts_status.apply_status_to_actor(act, "burn", 1, "turn_end")
 	ts_status.start_round()
@@ -707,7 +707,7 @@ func run_tests() -> Dictionary:
 	## Reaction watcher
 	var ts_react: TurnBasedGridTimespace = get_script().new()
 	ts_react.set_grid_map(GRID_MAP_RES.new())
-	var rw_actor := Node.new()
+	var rw_actor := Node.new(); rw_actor.name = "RWActor"
 	ts_react.add_actor(rw_actor, 5, 1)
 	var triggered := [false]
 	ts_react.register_reaction_watcher(func(a, id, payload): triggered[0] = true)
@@ -722,8 +722,8 @@ func run_tests() -> Dictionary:
 	## Serialization
 	var ts_ser: TurnBasedGridTimespace = get_script().new()
 	ts_ser.set_grid_map(GRID_MAP_RES.new())
-	var s_a := Node.new()
-	var s_b := Node.new()
+	var s_a := Node.new(); s_a.name = "SA"
+	var s_b := Node.new(); s_b.name = "SB"
 	ts_ser.add_actor(s_a, 10, 2)
 	ts_ser.add_actor(s_b, 5, 2)
 	ts_ser.apply_status_to_actor(s_a, "poison", 1, "turn_start")
@@ -745,7 +745,7 @@ func run_tests() -> Dictionary:
 	## Event log schema
 	var ts_log: TurnBasedGridTimespace = get_script().new()
 	ts_log.set_grid_map(GRID_MAP_RES.new())
-	var log_actor := Node.new()
+	var log_actor := Node.new(); log_actor.name = "LogActor"
 	ts_log.add_actor(log_actor, 5, 1)
 	ts_log.start_round()
 	ts_log.move_current_actor(Vector2i(1, 0))
