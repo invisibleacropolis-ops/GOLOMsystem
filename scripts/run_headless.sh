@@ -14,19 +14,22 @@ set -e
 echo "Tests finished with exit code ${test_exit}. Log: logs/headless_tests.log"
 
 echo 'Running ASCII console smoke...'
-{
-  echo 'spawn A 0 0'
-  echo 'list'
-  echo 'select 0 0'
-  echo 'move 1 1'
-  echo 'target 1 0'
-  echo 'clear'
-  echo 'remove A'
-  echo 'end_turn'
-  echo 'quit'
-} > logs/ascii_commands.txt
+if [ ! -f logs/ascii_commands.txt ]; then
+  # Provide a default command script when none exists.
+  cat <<'EOF' > logs/ascii_commands.txt
+spawn A 0 0
+list
+select 0 0
+move 1 1
+target 1 0
+clear
+remove A
+end_turn
+quit
+EOF
+fi
 
-cat logs/ascii_commands.txt | "$(dirname "$0")/godot4.sh" --headless --disable-dotnet --path . --script scripts/tools/ascii_console.gd 2>&1 | tee logs/ascii_smoke.log >/dev/null
+cat logs/ascii_commands.txt | "$(dirname "$0")/godot4.sh" --headless --disable-dotnet --path . --script scripts/tools/ascii_console.gd -- --pipe 2>&1 | tee logs/ascii_smoke.log >/dev/null
 echo 'ASCII smoke complete. Log: logs/ascii_smoke.log'
 
 # Generate live event feed by booting the slice briefly, then copy the
