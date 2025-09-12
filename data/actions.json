@@ -12,14 +12,20 @@
     "act_cost": 1,
     "chi_cost": 0,
     "cooldown": 1,
-    "effects": ["damage"],
+    "range": 1,
+    "uses_los": false,
+    "effects": ["deal_damage"],
+    "damage_amount": 1,
     "follow_up": ["combo_finish"]
   },
   "combo_finish": {
     "act_cost": 1,
     "chi_cost": 1,
     "cooldown": 2,
-    "effects": ["damage", "stun"],
+    "range": 1,
+    "uses_los": false,
+    "effects": ["deal_damage", "stun"],
+    "damage_amount": 1,
     "follow_up": []
   },
   "attack_basic": {
@@ -38,8 +44,11 @@
     "act_cost": 1,
     "chi_cost": 0,
     "cooldown": 1,
+    "range": 6,
+    "uses_los": true,
     "effects": ["apply_status"],
     "status": "overwatch",
+    "damage_amount": 0,
     "tags": ["reaction"]
   },
   "dash_strike": {

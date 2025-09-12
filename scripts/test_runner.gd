@@ -35,6 +35,7 @@ func _run() -> void:
         "terrain": "res://scripts/modules/terrain.gd",
         "runtime_services": "res://scripts/modules/runtime_services.gd",
         "console_commands": "res://scripts/tools/console_commands.gd",
+        "vertical_slice": "res://scripts/tests/vertical_slice_test.gd",
     }
     var total := 0
     var failed := 0

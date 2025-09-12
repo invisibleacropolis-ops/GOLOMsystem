@@ -44,6 +44,7 @@ func _init() -> void:
     loadouts = _LoadoutsScript.new(); loadouts.name = "Loadouts"
     reactions = _ReactionsScript.new(); reactions.name = "Reactions"
     event_bus = _EventBusScript.new(); event_bus.name = "EventBus"
+    abilities.event_bus = event_bus
     # Timespace requires a grid map for movement.
     timespace.set_grid_map(grid_map)
 

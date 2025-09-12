@@ -1,0 +1,9 @@
+spawn A 0 0
+list
+select 0 0
+move 1 1
+target 1 0
+clear
+remove A
+end_turn
+quit
