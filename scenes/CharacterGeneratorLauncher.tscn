@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://d0d0d0d0d0d0"]
-
-[ext_resource type="Script" path="res://scripts/character_generator_launcher.gd" id="1_script"]
-
-[node name="CharacterGeneratorLauncher" type="Node"]
-script = ExtResource("1_script")
