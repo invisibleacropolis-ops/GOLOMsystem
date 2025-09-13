@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TurnBasedGridTimespace API Documentation</title>
+</head>
+<body>
+<h1>Class: TurnBasedGridTimespace (inherits from Node)</h1>
+
+<h2>Brief Description</h2>
+<p>Orchestrates initiative order, action points, and status effects for actors placed on a `LogicGridMap`. A simple state machine coordinates the tactical round flow so UI or AI systems can subscribe via signals without tightly coupling to the internals.</p>
+
+<h2>Description</h2>
+<p></p>
+
+<h2>Methods</h2>
+<ul>
+<li><h3>_init</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>log_event</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Record an event in a structured format for later replay or debugging.</p>
+</li>
+<li><h3>set_grid_map</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Provide the grid map used for actor placement and movement.</p>
+</li>
+<li><h3>add_actor</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Add an actor with initiative, action points, and optional starting position. @param initiative Higher values act first. @param tie_break Optional deterministic tie breaker.</p>
+</li>
+<li><h3>_sort_initiative</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>add_object</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Register a static object that participates in the timeline.</p>
+</li>
+<li><h3>remove_actor</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Remove an actor from the timeline and grid.</p>
+</li>
+<li><h3>get_objects</h3>
+<p><strong>Returns:</strong> Array</p>
+<p>Expose tracked objects for inspection in tests.</p>
+</li>
+<li><h3>check_battle_end</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Determine if any faction has been eliminated and end the battle early.</p>
+</li>
+<li><h3>_set_state</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>start_round</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Reset action points and begin a new round.</p>
+</li>
+<li><h3>_begin_actor_turn</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>get_current_actor</h3>
+<p><strong>Returns:</strong> Object</p>
+<p>Returns the actor whose turn is currently active.</p>
+</li>
+<li><h3>end_turn</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Advance to the next actor in the initiative order.</p>
+</li>
+<li><h3>register_action</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Register an action definition.</p>
+</li>
+<li><h3>can_perform</h3>
+<p><strong>Returns:</strong> bool</p>
+</li>
+<li><h3>perform</h3>
+<p><strong>Returns:</strong> bool</p>
+</li>
+<li><h3>_spend_ap</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_get_actor_index</h3>
+<p><strong>Returns:</strong> int</p>
+</li>
+<li><h3>get_action_points</h3>
+<p><strong>Returns:</strong> int</p>
+<p>Remaining action points for a given actor.</p>
+</li>
+<li><h3>move_current_actor</h3>
+<p><strong>Returns:</strong> bool</p>
+<p>Convenience to move the current actor using the registered move action.</p>
+</li>
+<li><h3>register_reaction_watcher</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Allow external systems to observe reaction windows.</p>
+</li>
+<li><h3>_open_reaction_window</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>apply_damage</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>add_overwatcher</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Register an actor to react when others move into line of sight.</p>
+</li>
+<li><h3>_check_overwatch</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>apply_status_to_actor</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Apply a status effect to an actor.</p>
+</li>
+<li><h3>get_statuses_for_actor</h3>
+<p><strong>Returns:</strong> Array</p>
+</li>
+<li><h3>apply_status_to_tile</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Apply a status effect to a tile.</p>
+</li>
+<li><h3>get_statuses_for_tile</h3>
+<p><strong>Returns:</strong> Array</p>
+</li>
+<li><h3>remove_status_from_actor</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Remove a status effect from an actor or tile.</p>
+</li>
+<li><h3>remove_status_from_tile</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_tick_statuses</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>to_dict</h3>
+<p><strong>Returns:</strong> Dictionary</p>
+</li>
+<li><h3>from_dict</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>create_snapshot</h3>
+<p><strong>Returns:</strong> Dictionary</p>
+</li>
+<li><h3>serialize_event_log</h3>
+<p><strong>Returns:</strong> String</p>
+</li>
+<li><h3>replay_event_log</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>run_tests</h3>
+<p><strong>Returns:</strong> Dictionary</p>
+<p>Simple self-test to integrate with workspace.</p>
+</li>
+</ul>
+
+<h2>Members</h2>
+<ul>
+<li><h3>state</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>grid_map</h3>
+<p><strong>Type:</strong> Resource</p>
+</li>
+<li><h3>_actors</h3>
+<p><strong>Type:</strong> Array (Default: [])</p>
+</li>
+<li><h3>_objects</h3>
+<p><strong>Type:</strong> Array (Default: [])</p>
+</li>
+<li><h3>_actor_status</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>_tile_status</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>_current_index</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>event_log</h3>
+<p><strong>Type:</strong> Array (Default: [])</p>
+</li>
+<li><h3>_actions</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>_rng</h3>
+<p><strong>Type:</strong> RandomNumberGenerator (Default: new())</p>
+</li>
+<li><h3>_next_id</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>_overwatchers</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>_turn_id</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>reaction_watchers</h3>
+<p><strong>Type:</strong> Callable[] (Default: [])</p>
+</li>
+</ul>
+
+<h2>Signals</h2>
+<ul>
+<li><h3>round_started</h3>
+<p>Emitted when a new round begins.</p>
+</li>
+<li><h3>round_ended</h3>
+<p>Emitted when a round ends.</p>
+</li>
+<li><h3>battle_over</h3>
+<p>All actors on a faction are defeated.</p>
+</li>
+<li><h3>turn_started</h3>
+<p>Fired at the start of an actor's turn. @param actor The acting object</p>
+</li>
+<li><h3>turn_ended</h3>
+<p>Fired after an actor finishes its turn. @param actor The acting object</p>
+</li>
+<li><h3>ap_changed</h3>
+<p>Action points for an actor changed. @param actor The affected actor @param old Previous AP value @param new Current AP value</p>
+</li>
+<li><h3>action_performed</h3>
+<p>An action successfully executed.</p>
+</li>
+<li><h3>status_applied</h3>
+<p>Status effects applied/removed for both actors and tiles.</p>
+</li>
+<li><h3>status_removed</h3>
+</li>
+<li><h3>damage_applied</h3>
+<p>Damage dealt between actors. @param attacker Source of the damage @param defender Recipient of the damage @param amount HP removed</p>
+</li>
+<li><h3>reaction_triggered</h3>
+<p>Placeholder signals for future extensions.</p>
+</li>
+<li><h3>timespace_snapshot_created</h3>
+</li>
+</ul>
+
+<h2>Constants</h2>
+<ul>
+<li><h3>GRID_MAP_RES</h3>
+<p><strong>Value:</strong> <code>&lt;Object&gt;</code></p>
+</li>
+<li><h3>Logging</h3>
+<p><strong>Value:</strong> <code>&lt;Object&gt;</code></p>
+</li>
+<li><h3>IDLE</h3>
+<p><strong>Value:</strong> <code>0</code></p>
+</li>
+<li><h3>ROUND_START</h3>
+<p><strong>Value:</strong> <code>1</code></p>
+</li>
+<li><h3>ACTOR_START</h3>
+<p><strong>Value:</strong> <code>2</code></p>
+</li>
+<li><h3>ACTING</h3>
+<p><strong>Value:</strong> <code>3</code></p>
+</li>
+<li><h3>REACTION_WINDOWS</h3>
+<p><strong>Value:</strong> <code>4</code></p>
+</li>
+<li><h3>ACTOR_END</h3>
+<p><strong>Value:</strong> <code>5</code></p>
+</li>
+<li><h3>NEXT_ACTOR</h3>
+<p><strong>Value:</strong> <code>6</code></p>
+</li>
+<li><h3>ROUND_END</h3>
+<p><strong>Value:</strong> <code>7</code></p>
+</li>
+</ul>
+</body>
+</html>

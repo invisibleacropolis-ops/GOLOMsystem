@@ -1,0 +1,117 @@
+<h1>Map Generator Manual</h1>
+<p><code>map_generator.gd</code> defines the <code>MapGenerator</code> module, which orchestrates the creation of procedural grids and acts as a crucial bridge between the game's core logic and the <a href="https://github.com/godotengine/godot-tile-to-gridmap-addon">Tile to Gridmap</a> addon. This module simplifies the complex process of generating a game world from abstract parameters.</p>
+<h2>Responsibilities</h2>
+<ul>
+<li><strong>Procedural Map Generation:</strong> Invokes the <code>ProceduralMapGenerator</code> to produce a <code>LogicGridMap</code> instance, which is a pure data representation of the game world filled with terrain tags (e.g., "grass", "water", "mountain").</li>
+<li><strong>Visual Grid Generation:</strong> Translates these terrain tags into <code>TileSet</code> atlas coordinates through a <code>T2GTerrainLayer</code> (part of the Tile to Gridmap addon) and generates a populated 3D <code>GridMap</code> node. This <code>GridMap</code> is the visual representation of your game world.</li>
+<li><strong>Synchronization Bridge:</strong> Creates a <code>TileToGridMapBridge</code> that maintains synchronization between the <code>LogicGridMap</code> (data), the <code>GridMap</code> (visuals), and the <code>GridRealtimeRenderer</code> (debug/overlay visuals) for future updates or rebuilds.</li>
+<li><strong>Debug Visualization:</strong> Provides a <code>GridRealtimeRenderer</code> instance, ready for debug visualization or integration into tests, allowing you to see the generated logical grid.</li>
+</ul>
+<h2>Core Concepts and API Details</h2>
+<p>The <code>MapGenerator</code> streamlines the process of creating a game world by combining the power of procedural generation with Godot's 3D grid capabilities.</p>
+<h3>Class: <code>MapGenerator</code> (inherits from <code>Node</code>)</h3>
+<p>As a <code>Node</code>, <code>MapGenerator</code> can be instantiated and used within your game scenes or headless scripts.</p>
+<h4>Methods</h4>
+<ul>
+<li><strong><code>build(params: Dictionary) -&gt; Dictionary</code></strong>
+    This is the primary method for generating a game map. It takes a dictionary of parameters and returns a dictionary containing the generated map components.<ul>
+<li><code>params</code>: A <code>Dictionary</code> containing configuration for map generation. It accepts all fields used by <code>ProceduralMapGenerator.generate()</code>, plus additional parameters for visual integration:<ul>
+<li><code>width</code> (<code>int</code>): The width of the map in tiles.</li>
+<li><code>height</code> (<code>int</code>): The height of the map in tiles.</li>
+<li><code>seed</code> (<code>String</code> or <code>int</code>): A seed for deterministic generation.</li>
+<li><code>terrain</code> (<code>String</code>): Selects a preset terrain profile.</li>
+<li><code>tileset</code> (<code>TileSet</code>): <strong>Required.</strong> The Godot <code>TileSet</code> resource that contains the visual tiles used by the <code>T2GTerrainLayer</code> to build the <code>GridMap</code>.</li>
+<li><code>terrain_atlas</code> (<code>Dictionary</code>): <strong>Required.</strong> A dictionary mapping terrain tags (from <code>LogicGridMap</code>) to <code>Vector2i</code> atlas coordinates within the <code>tileset</code>. Example: <code>{"grass": Vector2i(0,0), "water": Vector2i(1,0)}</code>.</li>
+<li><code>mesh_library</code> (<code>MeshLibrary</code>, optional): An optional <code>MeshLibrary</code> resource to be used by the generated <code>GridMap</code>.</li>
+<li><code>tile_size</code> (<code>int</code>, optional): The pixel size for tiles, used by <code>T2GTerrainLayer</code>.</li>
+</ul>
+</li>
+<li><strong>Returns:</strong> A <code>Dictionary</code> containing the generated components:<ul>
+<li><code>map</code> (<code>LogicGridMap</code>): The generated logical grid map.</li>
+<li><code>grid_map</code> (<code>GridMap</code>): The generated 3D visual grid map.</li>
+<li><code>renderer</code> (<code>GridRealtimeRenderer</code>): An instance of the debug renderer.</li>
+<li><code>bridge</code> (<code>TileToGridMapBridge</code>): The bridge object for synchronization.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong><code>run_tests() -&gt; Dictionary</code></strong>
+    Executes a lightweight self-test for CI usage, ensuring the map generation process is functional.</li>
+</ul>
+<h3>Interaction with Other Modules</h3>
+<p>The <code>MapGenerator</code> acts as an orchestrator, calling methods on several other modules:</p>
+<ul>
+<li>
+<p>**<code>ProceduralMapGenerator</code> (from <code>scripts/modules/procedural_map_generator.gd</code>)</p>
+<ul>
+<li><strong>Purpose:</strong> This module is solely responsible for generating the raw <code>LogicGridMap</code> data based on procedural algorithms (e.g., noise-based biomes).</li>
+<li><strong>Key API Role:</strong> <code>MapGenerator</code> calls <code>ProceduralMapGenerator.generate(params)</code> to get the initial <code>LogicGridMap</code>.</li>
+<li><strong>API Reference:</strong> <a href="html/ProceduralMapGenerator.html">ProceduralMapGenerator API Documentation</a></li>
+</ul>
+</li>
+<li>
+<p>**<code>T2GTerrainLayer</code> (from <code>addons/tile_to_gridmap/t2g_terrain_layer.gd</code>)</p>
+<ul>
+<li><strong>Purpose:</strong> Part of the Tile to Gridmap addon. It takes the <code>LogicGridMap</code> and a <code>TileSet</code> and generates the 3D <code>GridMap</code> by mapping terrain tags to visual tiles.</li>
+<li><strong>Key API Role (inferred):</strong> <code>MapGenerator</code> uses this layer to <code>build_gridmap()</code> based on the <code>LogicGridMap</code> and <code>terrain_atlas</code>.</li>
+</ul>
+</li>
+<li>
+<p>**<code>TileToGridMapBridge</code> (from <code>addons/tile_to_gridmap/tile_to_gridmap_bridge.gd</code>)</p>
+<ul>
+<li><strong>Purpose:</strong> This module maintains the connection and synchronization between the logical <code>LogicGridMap</code> and the visual <code>GridMap</code> and <code>GridRealtimeRenderer</code>. It allows for dynamic updates to the visual grid when the logical grid changes.</li>
+<li><strong>Key API Role (inferred):</strong> <code>MapGenerator</code> instantiates this bridge and sets its <code>logic</code> (to the <code>LogicGridMap</code>) and <code>terrain_layer_path</code> properties. The <code>bridge.build_from_tilemap()</code> method can be called to rebuild the visual grid if the underlying <code>LogicGridMap</code> or <code>TileMap</code> (if used) changes.</li>
+</ul>
+</li>
+<li>
+<p>**<code>GridRealtimeRenderer</code> (from <code>scripts/modules/GridRealtimeRenderer.gd</code>)</p>
+<ul>
+<li><strong>Purpose:</strong> A high-performance visual overlay renderer. <code>MapGenerator</code> provides an instance of this for immediate debug visualization of the generated <code>LogicGridMap</code>.</li>
+<li><strong>Key API Role:</strong> The returned <code>renderer</code> instance can be used to display the <code>LogicGridMap</code>'s contents (e.g., terrain types, actor positions) using its <code>set_cell_color()</code>, <code>apply_color_map()</code>, or ASCII output features.</li>
+<li><strong>API Reference:</strong> <a href="html/GridRealtimeRenderer.html">GridRealtimeRenderer API Documentation</a></li>
+</ul>
+</li>
+</ul>
+<h2>Usage Example</h2>
+<pre><code class="language-gdscript">var gen := MapGenerator.new()
+# Preload your TileSet resource
+var tileset := preload(&quot;res://tilesets/terrain.tres&quot;) # Adjust path to your TileSet
+
+# Define your terrain atlas: mapping terrain tags (from LogicGridMap) to TileSet atlas coordinates
+var atlas := {
+    &quot;grass&quot;: Vector2i(0,0),
+    &quot;water&quot;: Vector2i(1,0),
+    &quot;mountain&quot;: Vector2i(2,0)
+}
+
+# Build the map
+var result := gen.build({
+    &quot;width&quot;: 32,
+    &quot;height&quot;: 32,
+    &quot;seed&quot;: &quot;demo_world&quot;, # Use a string seed for deterministic generation
+    &quot;terrain&quot;: &quot;plains&quot;, # A preset terrain profile for ProceduralMapGenerator
+    &quot;tileset&quot;: tileset,
+    &quot;terrain_atlas&quot;: atlas,
+    &quot;tile_size&quot;: 32 # Assuming 32x32 pixel tiles
+})
+
+# Extract the generated components from the result dictionary
+var map : LogicGridMap = result.map # The logical grid data
+var grid_map : GridMap = result.grid_map # The 3D visual grid node
+var renderer : GridRealtimeRenderer = result.renderer # The debug renderer
+var bridge : TileToGridMapBridge = result.bridge # The synchronization bridge
+
+# Add the visual components to your scene tree
+add_child(grid_map)
+add_child(renderer)
+
+# Example: If you make changes to the underlying LogicGridMap or TileMap,
+# you can call bridge.build_from_tilemap() to rebuild the visual GridMap.
+# bridge.build_from_tilemap() # Rebuilds the visual GridMap if TileMap edits occur
+</code></pre>
+<p>The returned objects (<code>map</code>, <code>grid_map</code>, <code>renderer</code>, <code>bridge</code>) can be added to a scene for display or used headlessly for tests and data processing.</p>
+<h2>Testing</h2>
+<p>To ensure the <code>MapGenerator</code> and its integrated components function correctly, run all module tests with the shared runner:</p>
+<pre><code class="language-bash">godot4 --headless --path . --script scripts/test_runner.gd
+</code></pre>
+<p>This command executes the tests headlessly, verifying that the map generation process, including the bridging to the visual <code>GridMap</code> and <code>GridRealtimeRenderer</code>, works as expected.</p>

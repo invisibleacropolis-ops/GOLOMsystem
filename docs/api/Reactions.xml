@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="Reactions" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="log_event">
+			<return type="void" />
+			<param index="0" name="t" type="String" />
+			<param index="1" name="actor" type="Object" default="null" />
+			<param index="2" name="pos" type="Variant" default="null" />
+			<param index="3" name="data" type="Variant" default="null" />
+			<description>
+			</description>
+		</method>
+		<method name="trigger">
+			<return type="void" />
+			<param index="0" name="actor" type="Object" />
+			<param index="1" name="data" type="Variant" />
+			<param index="2" name="priority" type="int" default="0" />
+			<description>
+			</description>
+		</method>
+		<method name="resolve_next">
+			<return type="Variant" />
+			<description>
+			</description>
+		</method>
+		<method name="get_pending">
+			<return type="Array" />
+			<description>
+			</description>
+		</method>
+		<method name="run_tests">
+			<return type="Dictionary" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="queued" type="Array" setter="" getter="" default="[]">
+		</member>
+		<member name="event_log" type="Array" setter="" getter="" default="[]">
+		</member>
+	</members>
+	<signals>
+		<signal name="reaction_queued">
+			<param index="0" name="reaction" type="Variant" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="Logging" value="&lt;Object&gt;">
+		</constant>
+	</constants>
+</class>

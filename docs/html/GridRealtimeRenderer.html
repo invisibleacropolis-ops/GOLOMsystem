@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GridRealtimeRenderer API Documentation</title>
+</head>
+<body>
+<h1>Class: GridRealtimeRenderer (inherits from Node2D)</h1>
+
+<h2>Brief Description</h2>
+<p></p>
+
+<h2>Description</h2>
+<p></p>
+
+<h2>Methods</h2>
+<ul>
+<li><h3>_ready</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_process</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_ascii_entity</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Entities may stack in a single cell; entries are sorted first by `priority` then by `z_index` so background layers remain beneath overlays. `id` identifies the source actor for selective removal.</p>
+</li>
+<li><h3>clear_ascii_entities</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>remove_ascii_actor</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Remove a specific actor's ASCII footprint using cached cell positions.</p>
+</li>
+<li><h3>_remove_ascii_actor_rid</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Internal helper that erases cached cells and state for an actor RID.</p>
+</li>
+<li><h3>collect_ascii_entities</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_get_cached_footprint</h3>
+<p><strong>Returns:</strong> Vector2i[]</p>
+<p>Retrieve a cached array of relative cell offsets for an actor's footprint. Footprints are keyed by actor RID and recalculated only when `size` changes.</p>
+</li>
+<li><h3>_build_layers</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_mark_mi_visible_refresh</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_build_label_pool</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_build_palette_overlay</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_shader_mode</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>begin_labels</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>push_label</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>end_labels</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_draw</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_idx</h3>
+<p><strong>Returns:</strong> int</p>
+</li>
+<li><h3>in_bounds</h3>
+<p><strong>Returns:</strong> bool</p>
+</li>
+<li><h3>_alpha_over</h3>
+<p><strong>Returns:</strong> Color</p>
+</li>
+<li><h3>set_visibility</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>ensure_channel</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_channel_value</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>apply_heatmap_auto</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>apply_heatmap</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_cell_color</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_cells_color_bulk</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>apply_color_map</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>clear_all</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_mark</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>clear_mark</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_stroke</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>clear_stroke</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>_v2i</h3>
+<p><strong>Returns:</strong> Vector2i</p>
+</li>
+<li><h3>stroke_outline_for</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_hatch</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_world_offset</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>set_grid_size</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>generate_ascii_field</h3>
+<p><strong>Returns:</strong> String</p>
+</li>
+<li><h3>_ansi_color</h3>
+<p><strong>Returns:</strong> String</p>
+</li>
+<li><h3>update_input</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Record an interaction on the ASCII grid. Supported actions: - "select" : highlight a cell and remember its contents - "move" : move the previously selected marker to a new cell - "target" : mark a cell with `T` for targeting - "click" : mark a cell with `C` for generic clicks - "drag_start"/"drag"/"drag_end" : preview a path while dragging - "clear" : remove all ASCII entities</p>
+</li>
+<li><h3>_render_drag_path</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Generate a temporary ASCII path from `_drag_start` to `end_pos`. Existing path glyphs are cleared before the new path is stamped.</p>
+</li>
+<li><h3>_bresenham</h3>
+<p><strong>Returns:</strong> Vector2i[]</p>
+<p>Compute all integer grid points between two coordinates using Bresenham's line algorithm.</p>
+</li>
+<li><h3>_get_top_ascii_entity</h3>
+<p><strong>Returns:</strong> Variant</p>
+</li>
+<li><h3>run_tests</h3>
+<p><strong>Returns:</strong> Dictionary</p>
+</li>
+<li><h3>_make_mark_shader</h3>
+<p><strong>Returns:</strong> Shader</p>
+</li>
+<li><h3>_make_stroke_shader</h3>
+<p><strong>Returns:</strong> Shader</p>
+</li>
+<li><h3>_make_hatch_shader</h3>
+<p><strong>Returns:</strong> Shader</p>
+</li>
+</ul>
+
+<h2>Members</h2>
+<ul>
+<li><h3>enabled_layers</h3>
+<p><strong>Type:</strong> StringName[] (Default: [...])</p>
+</li>
+<li><h3>layer_opacity_fill</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>layer_opacity_heat</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>layer_opacity_glyph</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>layer_opacity_labels</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>layer_opacity_outline</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>world_offset</h3>
+<p><strong>Type:</strong> Vector2 (Default: Vector2(0, 0))</p>
+</li>
+<li><h3>cell_size</h3>
+<p><strong>Type:</strong> Vector2 (Default: Vector2(48, 48))</p>
+</li>
+<li><h3>grid_size</h3>
+<p><strong>Type:</strong> Vector2i (Default: Vector2i(16, 9))</p>
+</li>
+<li><h3>show_grid_lines</h3>
+<p><strong>Type:</strong> bool (Default: true)</p>
+</li>
+<li><h3>grid_line_thickness</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>grid_line_modulate</h3>
+<p><strong>Type:</strong> Color (Default: Color(1, 1, 1, 0.15))</p>
+</li>
+<li><h3>enable_fill</h3>
+<p><strong>Type:</strong> bool (Default: true)</p>
+</li>
+<li><h3>enable_heat</h3>
+<p><strong>Type:</strong> bool (Default: true)</p>
+</li>
+<li><h3>enable_marks</h3>
+<p><strong>Type:</strong> bool (Default: true)</p>
+</li>
+<li><h3>enable_strokes</h3>
+<p><strong>Type:</strong> bool (Default: true)</p>
+</li>
+<li><h3>enable_hatch</h3>
+<p><strong>Type:</strong> bool (Default: false)</p>
+</li>
+<li><h3>opacity_fill</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>opacity_heat</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>opacity_marks</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>opacity_strokes</h3>
+<p><strong>Type:</strong> float (Default: 1.0)</p>
+</li>
+<li><h3>opacity_hatch</h3>
+<p><strong>Type:</strong> float (Default: 0.4)</p>
+</li>
+<li><h3>label_font</h3>
+<p><strong>Type:</strong> Font</p>
+</li>
+<li><h3>max_labels</h3>
+<p><strong>Type:</strong> int (Default: 256)</p>
+</li>
+<li><h3>use_gpu_labels</h3>
+<p><strong>Type:</strong> bool (Default: true)</p>
+</li>
+<li><h3>_label_pool</h3>
+<p><strong>Type:</strong> Label[] (Default: [])</p>
+</li>
+<li><h3>_label_in_use</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>_gpu_batcher</h3>
+<p><strong>Type:</strong> GPULabelBatcher</p>
+</li>
+<li><h3>shader_mode</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>_palette_overlay</h3>
+<p><strong>Type:</strong> ColorRect</p>
+</li>
+<li><h3>_palette_material</h3>
+<p><strong>Type:</strong> ShaderMaterial</p>
+</li>
+<li><h3>heat_gradient</h3>
+<p><strong>Type:</strong> Gradient (Default: new())</p>
+</li>
+<li><h3>_fill_mm</h3>
+<p><strong>Type:</strong> Variant</p>
+</li>
+<li><h3>_fill_mmi</h3>
+<p><strong>Type:</strong> MultiMeshInstance2D</p>
+</li>
+<li><h3>_mark_mm</h3>
+<p><strong>Type:</strong> MultiMesh</p>
+</li>
+<li><h3>_mark_mmi</h3>
+<p><strong>Type:</strong> MultiMeshInstance2D</p>
+</li>
+<li><h3>_mark_mat</h3>
+<p><strong>Type:</strong> ShaderMaterial</p>
+</li>
+<li><h3>_stroke_mm</h3>
+<p><strong>Type:</strong> MultiMesh</p>
+</li>
+<li><h3>_stroke_mmi</h3>
+<p><strong>Type:</strong> MultiMeshInstance2D</p>
+</li>
+<li><h3>_stroke_mat</h3>
+<p><strong>Type:</strong> ShaderMaterial</p>
+</li>
+<li><h3>_hatch_mm</h3>
+<p><strong>Type:</strong> MultiMesh</p>
+</li>
+<li><h3>_hatch_mmi</h3>
+<p><strong>Type:</strong> MultiMeshInstance2D</p>
+</li>
+<li><h3>_hatch_mat</h3>
+<p><strong>Type:</strong> ShaderMaterial</p>
+</li>
+<li><h3>_w</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>_h</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>_tile_count</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>_channels</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>_auto_minmax</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>_vis_mask</h3>
+<p><strong>Type:</strong> PackedFloat32Array (Default: PackedFloat32Array())</p>
+</li>
+<li><h3>_time</h3>
+<p><strong>Type:</strong> float (Default: 0.0)</p>
+</li>
+<li><h3>ascii_update_sec</h3>
+<p><strong>Type:</strong> float (Default: 0.5)</p>
+</li>
+<li><h3>_ascii_accum</h3>
+<p><strong>Type:</strong> float (Default: 0.0)</p>
+</li>
+<li><h3>ascii_debug</h3>
+<p><strong>Type:</strong> String (Default: "")</p>
+</li>
+<li><h3>ascii_use_color</h3>
+<p><strong>Type:</strong> bool (Default: false)</p>
+</li>
+<li><h3>ascii_actor_group</h3>
+<p><strong>Type:</strong> StringName (Default: &"actors")</p>
+</li>
+<li><h3>ascii_include_actors</h3>
+<p><strong>Type:</strong> bool (Default: true)</p>
+</li>
+<li><h3>_ascii_entities</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+<p>maps `Vector2i` to `Array` of stacked entity dictionaries</p>
+</li>
+<li><h3>_footprint_cache</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+<p>actor RID -> Array[Vector2i] relative tile offsets</p>
+</li>
+<li><h3>_actor_cells</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+<p>actor RID -> Array[Vector2i] absolute cells for removal</p>
+</li>
+<li><h3>_actor_states</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+<p>actor RID -> {"pos": Vector2i, "size": Vector2i}</p>
+</li>
+<li><h3>input_pos</h3>
+<p><strong>Type:</strong> Vector2i (Default: Vector2i(0, 0))</p>
+<p>Exposed input fields for grid coordinate and action.</p>
+</li>
+<li><h3>input_action</h3>
+<p><strong>Type:</strong> String (Default: "")</p>
+</li>
+<li><h3>_selected_pos</h3>
+<p><strong>Type:</strong> Vector2i (Default: Vector2i(-1, -1))</p>
+</li>
+<li><h3>_selected_char</h3>
+<p><strong>Type:</strong> String (Default: "")</p>
+</li>
+<li><h3>_selected_color</h3>
+<p><strong>Type:</strong> Color (Default: Color(1, 1, 1, 1))</p>
+</li>
+<li><h3>_selected_priority</h3>
+<p><strong>Type:</strong> int (Default: 0)</p>
+</li>
+<li><h3>_drag_start</h3>
+<p><strong>Type:</strong> Vector2i (Default: Vector2i(-1, -1))</p>
+<p>starting tile of an active drag operation</p>
+</li>
+</ul>
+
+<h2>Signals</h2>
+<ul>
+</ul>
+
+<h2>Constants</h2>
+<ul>
+<li><h3>GPULabelBatcher</h3>
+<p><strong>Value:</strong> <code>&lt;Object&gt;</code></p>
+</li>
+<li><h3>DOT</h3>
+<p><strong>Value:</strong> <code>0</code></p>
+</li>
+<li><h3>RING</h3>
+<p><strong>Value:</strong> <code>1</code></p>
+</li>
+<li><h3>CROSS</h3>
+<p><strong>Value:</strong> <code>2</code></p>
+</li>
+<li><h3>X</h3>
+<p><strong>Value:</strong> <code>3</code></p>
+</li>
+<li><h3>TRIANGLE</h3>
+<p><strong>Value:</strong> <code>4</code></p>
+</li>
+<li><h3>DIAMOND</h3>
+<p><strong>Value:</strong> <code>5</code></p>
+</li>
+<li><h3>ARROW</h3>
+<p><strong>Value:</strong> <code>6</code></p>
+</li>
+<li><h3>CHECKER</h3>
+<p><strong>Value:</strong> <code>0</code></p>
+</li>
+<li><h3>DIAG</h3>
+<p><strong>Value:</strong> <code>1</code></p>
+</li>
+<li><h3>STRIPES</h3>
+<p><strong>Value:</strong> <code>2</code></p>
+</li>
+<li><h3>DRAG_PATH_ID</h3>
+<p><strong>Value:</strong> <code>-1000</code></p>
+<p>identifier used for transient drag preview glyphs</p>
+</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Attributes API Documentation</title>
+</head>
+<body>
+<h1>Class: Attributes (inherits from Node)</h1>
+
+<h2>Brief Description</h2>
+<p></p>
+
+<h2>Description</h2>
+<p></p>
+
+<h2>Methods</h2>
+<ul>
+<li><h3>log_event</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Push an event into the shared log using the structured schema.</p>
+</li>
+<li><h3>set_base</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Set the base value for an actor/key pair.</p>
+</li>
+<li><h3>add_modifier</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Add a modifier entry. `add` applies before multiplication.</p>
+</li>
+<li><h3>clear_modifiers</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Remove modifiers originating from `source`.</p>
+</li>
+<li><h3>get_value</h3>
+<p><strong>Returns:</strong> float</p>
+<p>Compute the final value from base and all modifiers.</p>
+</li>
+<li><h3>set_range</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Define clamped range for a stat key.</p>
+</li>
+<li><h3>run_tests</h3>
+<p><strong>Returns:</strong> Dictionary</p>
+</li>
+</ul>
+
+<h2>Members</h2>
+<ul>
+<li><h3>base_values</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>modifiers</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>ranges</h3>
+<p><strong>Type:</strong> Dictionary (Default: {})</p>
+</li>
+<li><h3>event_log</h3>
+<p><strong>Type:</strong> Array (Default: [])</p>
+</li>
+</ul>
+
+<h2>Signals</h2>
+<ul>
+</ul>
+
+<h2>Constants</h2>
+<ul>
+<li><h3>Logging</h3>
+<p><strong>Value:</strong> <code>&lt;Object&gt;</code></p>
+</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,14 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.gd]
+# GDScript in this project uses tabs for indentation to avoid parser
+# errors when mixed with space indents. Keep tabs-only in .gd files.
+indent_style = tab
+indent_size = 4

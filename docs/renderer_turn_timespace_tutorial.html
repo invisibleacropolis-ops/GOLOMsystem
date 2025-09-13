@@ -1,0 +1,97 @@
+<h1>Combining GridRealtimeRenderer with TurnBasedGridTimespace</h1>
+<p>This tutorial walks through wiring the high-performance <code>GridRealtimeRenderer</code> with the <code>TurnBasedGridTimespace</code> module. This combination is fundamental for creating tactical grid-based games, allowing you to visualize game state changes as turns progress.</p>
+<h2>1. Create the Scene Structure</h2>
+<p>First, set up your basic scene in Godot:</p>
+<ol>
+<li>Add a <code>Node2D</code> as the root of your new scene (e.g., <code>TacticalGame.tscn</code>).</li>
+<li>Instance <code>GridRealtimeRenderer</code> and <code>TurnBasedGridTimespace</code> as children of your root <code>Node2D</code>. You can do this by dragging their <code>.gd</code> scripts into the scene as new nodes, or by instantiating them in code.</li>
+<li>In the Inspector for <code>GridRealtimeRenderer</code>, set its <code>grid_size</code> (e.g., <code>Vector2i(32, 32)</code>) and <code>cell_size</code> (e.g., <code>Vector2(48, 48)</code>) to match the dimensions of your game map. These properties define the visual grid.</li>
+</ol>
+<h2>2. Register Actors and Initial Visualization</h2>
+<p>Once your scene is set up, you need to register your game's actors with the <code>TurnBasedGridTimespace</code> and provide an initial visual representation using the <code>GridRealtimeRenderer</code>.</p>
+<pre><code class="language-gdscript"># Get references to your instantiated nodes
+@onready var timespace: TurnBasedGridTimespace = $TurnBasedGridTimespace
+@onready var renderer: GridRealtimeRenderer = $GridRealtimeRenderer
+
+func _ready() -&gt; void:
+    # Create an actor instance. BaseActor is a common base class for game entities.
+    # Parameters: name, initial grid_pos, facing, size (footprint on grid)
+    var actor := BaseActor.new(&quot;hero&quot;, Vector2i.ZERO, Vector2i.RIGHT, Vector2i.ONE)
+    add_child(actor) # Add the actor to the scene tree
+
+    # Visualize the actor's initial position using the renderer
+    # set_cell_color(p: Vector2i, color: Color) fills a grid cell with a color.
+    renderer.set_cell_color(Vector2i.ZERO, Color.BLUE) # Highlight the hero's starting cell in blue
+
+    # Register the actor with the TurnBasedGridTimespace
+    # add_actor(actor: Object, initiative: int, action_points: int, pos: Vector2i, tie_break: int = -1)
+    # This adds the actor to the turn order, sets their initial AP, and places them on the logical grid.
+    timespace.add_actor(actor, 10, 2, Vector2i.ZERO, 0) # Hero has initiative 10, 2 AP, starts at (0,0)
+</code></pre>
+<ul>
+<li><strong><code>BaseActor</code>:</strong> This is a fundamental class for any entity that exists on the grid and participates in the turn-based system.</li>
+<li><strong><code>TurnBasedGridTimespace.add_actor()</code>:</strong> This method is crucial. It not only adds the actor to the turn order but also associates them with a logical position on the grid, which <code>TurnBasedGridTimespace</code> uses for its internal logic.</li>
+<li><strong><code>GridRealtimeRenderer.set_cell_color()</code>:</strong> This is a simple way to visually mark a cell. As the actor moves, you'll update this.</li>
+</ul>
+<h2>3. Advance Turns and Update Visualization</h2>
+<p>The core of a turn-based game is advancing turns and updating the game state and visuals accordingly.</p>
+<pre><code class="language-gdscript"># Call this to begin the first round of combat
+timespace.start_round()
+
+# In your game loop or input handler, when an actor performs an action:
+# Example: Player moves to a new position
+func _on_player_move_action(target_pos: Vector2i) -&gt; void:
+    var current_actor = timespace.get_current_actor()
+    if current_actor == actor: # Check if it's the hero's turn
+        # Perform the move action through the timespace
+        # perform(actor: Object, action_id: String, payload: Variant = null) -&gt; bool
+        var success = timespace.perform(current_actor, &quot;move&quot;, {&quot;target_pos&quot;: target_pos})
+        if success:
+            # Update the renderer to reflect the new position
+            renderer.clear_all() # Clear previous highlights
+            renderer.set_cell_color(current_actor.grid_pos, Color.BLUE) # Highlight new position
+
+            # After the actor has finished all actions for their turn, end it
+            timespace.end_turn()
+</code></pre>
+<ul>
+<li><strong><code>TurnBasedGridTimespace.start_round()</code>:</strong> This method initializes the turn system, resets AP, and prepares for the first turn.</li>
+<li><strong><code>TurnBasedGridTimespace.perform()</code>:</strong> This method is used to execute actions. It handles AP deduction, internal logic, and often updates the actor's <code>grid_pos</code> (if it's a movement action).</li>
+<li><strong><code>TurnBasedGridTimespace.end_turn()</code>:</strong> After an actor has completed their actions, this method advances the turn to the next actor in the initiative order.</li>
+<li><strong><code>GridRealtimeRenderer</code> Updates:</strong> Each time the game state changes (e.g., an actor moves, a status is applied), you'll need to update the <code>GridRealtimeRenderer</code> to reflect these changes. This might involve:<ul>
+<li><code>renderer.clear_all()</code>: To remove old highlights.</li>
+<li><code>renderer.set_cell_color()</code>: To highlight new positions or areas.</li>
+<li><code>renderer.set_mark()</code>: To place markers (e.g., target indicators).</li>
+<li><code>renderer.push_label()</code>: To display text labels (e.g., damage numbers, actor names).</li>
+</ul>
+</li>
+</ul>
+<h2>4. Use GPU Labels for Text</h2>
+<p>For efficient text rendering, especially when displaying many labels (like actor names or damage numbers), <code>GridRealtimeRenderer</code> supports GPU-accelerated labels via <code>GPULabelBatcher</code>.</p>
+<pre><code class="language-gdscript"># Ensure use_gpu_labels is true on your GridRealtimeRenderer instance
+renderer.use_gpu_labels = true
+renderer.label_font = preload(&quot;res://path/to/your_font.tres&quot;) # Set a font resource
+
+# Wrap your label calls with begin_labels() and end_labels()
+# This batches all labels for a single, optimized draw call.
+renderer.begin_labels()
+renderer.push_label(&quot;Hero&quot;, actor.grid_pos.to_float() * renderer.cell_size, Color.WHITE) # Convert grid pos to world pos
+# Add more labels as needed
+renderer.end_labels()
+</code></pre>
+<ul>
+<li><strong><code>renderer.use_gpu_labels</code>:</strong> Set this to <code>true</code> to enable GPU-accelerated label rendering.</li>
+<li><strong><code>renderer.label_font</code>:</strong> Assign a <code>Font</code> resource here.</li>
+<li><strong><code>renderer.begin_labels()</code> / <code>renderer.end_labels()</code>:</strong> These methods define a block within which all <code>push_label()</code> calls are batched. This significantly improves performance compared to drawing individual labels.</li>
+<li><strong><code>renderer.push_label(text: String, pos: Vector2, color: Color = Color(1, 1, 1, 1)) -&gt; void</code>:</strong> Adds a label to the batch. Note that <code>pos</code> is a <code>Vector2</code> (world coordinates), so you'll need to convert <code>Vector2i</code> grid positions to world positions (e.g., <code>actor.grid_pos.to_float() * renderer.cell_size</code>).</li>
+</ul>
+<h2>5. Night Vision or Fog of War (Shader Modes)</h2>
+<p><code>GridRealtimeRenderer</code> supports different shader modes to apply global visual effects, useful for features like night vision or fog of war.</p>
+<pre><code class="language-gdscript"># Toggle visualization modes at runtime:
+renderer.set_shader_mode(1) # Activates a &quot;night vision&quot; effect
+# renderer.set_shader_mode(2) # Activates a &quot;fog of war&quot; effect
+</code></pre>
+<ul>
+<li><strong><code>renderer.set_shader_mode(mode: int) -&gt; void</code>:</strong> This method switches the active shader mode. The integer <code>mode</code> corresponds to predefined visual effects implemented within the renderer's shaders.</li>
+</ul>
+<p>This scene setup forms the basis for tactical prototypes, effectively combining the logical turn management of <code>TurnBasedGridTimespace</code> with the powerful visualization capabilities of <code>GridRealtimeRenderer</code>.</p>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="GridRealtimeRenderer._MockMM" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_init">
+			<return type="void" />
+			<param index="0" name="count" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="set_instance_color">
+			<return type="void" />
+			<param index="0" name="i" type="int" />
+			<param index="1" name="c" type="Color" />
+			<description>
+			</description>
+		</method>
+		<method name="get_instance_color">
+			<return type="Color" />
+			<param index="0" name="i" type="int" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="colors" type="Color[]" setter="" getter="" default="[]">
+		</member>
+	</members>
+</class>

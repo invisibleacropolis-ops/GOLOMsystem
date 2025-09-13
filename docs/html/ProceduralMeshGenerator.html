@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ProceduralMeshGenerator API Documentation</title>
+</head>
+<body>
+<h1>Class: ProceduralMeshGenerator (inherits from Node)</h1>
+
+<h2>Brief Description</h2>
+<p></p>
+
+<h2>Description</h2>
+<p></p>
+
+<h2>Methods</h2>
+<ul>
+<li><h3>generate_for</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Entry point used by tests or runtime tools.</p>
+</li>
+<li><h3>_place_placeholder_mesh</h3>
+<p><strong>Returns:</strong> void</p>
+</li>
+<li><h3>reveal_building</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Groups connected roof cells so individual buildings can be revealed.</p>
+</li>
+<li><h3>update_roof_shader</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Pushes player position and radius to roof materials for fade-out reveals.</p>
+</li>
+<li><h3>_build_perimeter_walls</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Checks neighbours to place wall segments only on exterior edges.</p>
+</li>
+<li><h3>_place_portal_markers</h3>
+<p><strong>Returns:</strong> void</p>
+<p>Reads TileSet custom data for stairs/portal markers and spawns props.</p>
+</li>
+</ul>
+
+<h2>Members</h2>
+<ul>
+</ul>
+
+<h2>Signals</h2>
+<ul>
+</ul>
+
+<h2>Constants</h2>
+<ul>
+<li><h3>LogicGridMap</h3>
+<p><strong>Value:</strong> <code>&lt;Object&gt;</code></p>
+</li>
+<li><h3>TILE_ROOF_WOOD</h3>
+<p><strong>Value:</strong> <code>"roof_wood"</code></p>
+<p>Known tile identifiers. Actual meshes and materials will be supplied later.</p>
+</li>
+<li><h3>TILE_ROOF_STONE</h3>
+<p><strong>Value:</strong> <code>"roof_stone"</code></p>
+</li>
+<li><h3>TILE_WALL_BRICK</h3>
+<p><strong>Value:</strong> <code>"wall_brick"</code></p>
+</li>
+</ul>
+</body>
+</html>

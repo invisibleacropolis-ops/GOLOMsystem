@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1i56m1j3vrw2"]
+; This test scene exercises the Grid facade found in res://scripts/grid/grid.gd
+
+[ext_resource type="Script" path="res://scenes/test_grid.gd" id="1_l4bel"]
+
+[node name="TestGrid" type="Node"]
+script = ExtResource("1_l4bel")

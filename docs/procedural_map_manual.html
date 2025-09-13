@@ -1,0 +1,72 @@
+<h1>Procedural Map Generator Manual</h1>
+<p><code>procedural_map_generator.gd</code> defines the <code>ProceduralMapGenerator</code> module, which is responsible for building <code>LogicGridMap</code> instances from simple noise algorithms and string-based presets. This module allows engineers to quickly produce deterministic grid layouts for prototyping, testing, or even full game levels without the need for manual tile authoring.</p>
+<h2>Responsibilities</h2>
+<ul>
+<li>Create headless <code>LogicGridMap</code> instances suitable for tests or tools.</li>
+<li>Support repeatable map layouts through the use of a string <code>seed</code>.</li>
+<li>Offer coarse terrain profiles (e.g., <code>plains</code>, <code>islands</code>, <code>mountains</code>) to generate varied geographical features.</li>
+<li>Generate <code>LogicGridMap</code>s with terrain tags (e.g., "grass", "water") based on layered noise.</li>
+<li>Optionally carve basic road networks to ensure connectivity.</li>
+</ul>
+<h2>Core Concepts and API Details</h2>
+<p>The <code>ProceduralMapGenerator</code> is a powerful tool for quickly generating game worlds. It focuses solely on creating the logical grid data, leaving the visual representation to other modules like <code>MapGenerator</code> or <code>GridRealtimeRenderer</code>.</p>
+<h3>Class: <code>ProceduralMapGenerator</code> (inherits from <code>Node</code>)</h3>
+<p>As a <code>Node</code>, <code>ProceduralMapGenerator</code> can be instantiated and used within your game scenes or headless scripts.</p>
+<h4>Methods</h4>
+<ul>
+<li><strong><code>generate(params: Dictionary) -&gt; LogicGridMap</code></strong>
+    This is the core method for generating a new <code>LogicGridMap</code>. It uses layered noise to create height, terrain, and connected road features.<ul>
+<li><code>params</code>: A <code>Dictionary</code> containing the generation parameters. Key fields include:<ul>
+<li><code>width</code> (<code>int</code>): The desired width of the map in tiles.</li>
+<li><code>height</code> (<code>int</code>): The desired height of the map in tiles.</li>
+<li><code>seed</code> (<code>String</code> or <code>int</code>): A seed used for deterministic output. Using the same seed will always produce the same map.</li>
+<li><code>terrain</code> (<code>String</code>): Selects a preset terrain profile (e.g., "plains", "islands"). This influences the noise patterns used.</li>
+</ul>
+</li>
+<li><strong>Returns:</strong> A fully generated <code>LogicGridMap</code> instance. The first tag on each tile typically controls rendering, while subsequent tags describe underlying terrain (e.g., <code>"grass"</code>, <code>"dirt"</code>).</li>
+</ul>
+</li>
+<li><strong><code>_carve_roads(map: LogicGridMap) -&gt; void</code></strong>
+    An internal helper method that carves a simple cross-shaped road network into the provided <code>LogicGridMap</code> to ensure paths remain connected. This is typically called by <code>generate()</code>.</li>
+<li><strong><code>run_tests() -&gt; Dictionary</code></strong>
+    Executes a lightweight self-test for CI usage, ensuring the map generation process is functional.</li>
+</ul>
+<h2>Usage</h2>
+<p>To generate a map, you instantiate <code>ProceduralMapGenerator</code>, define your parameters in a dictionary, and call the <code>generate()</code> method.</p>
+<pre><code class="language-gdscript">var gen := ProceduralMapGenerator.new()
+
+var params = {
+    &quot;width&quot;: 32,
+    &quot;height&quot;: 32,
+    &quot;seed&quot;: &quot;my_awesome_world_seed&quot;, # Use a unique string for a unique map
+    &quot;terrain&quot;: &quot;islands&quot; # Choose a terrain profile
+}
+
+var map := gen.generate(params) # 'map' is now a LogicGridMap instance
+print(&quot;Generated a map with dimensions: &quot; + str(map.width) + &quot;x&quot; + str(map.height))
+
+# The returned LogicGridMap contains width, height, and per-tile tags
+# based on the chosen profile. You can access tile data like this:
+# var tile_data = map.get_tile_data(Vector2i(0,0))
+# print(&quot;Tile at (0,0) has tags: &quot; + str(tile_data.tags))
+
+# You can then pass this LogicGridMap to other modules for visualization or gameplay logic.
+# For example, to visualize it:
+# var visual_renderer = GridRealtimeRenderer.new()
+# visual_renderer.set_grid_size(map.width, map.height)
+# visual_renderer.apply_color_map(map.get_terrain_colors()) # Assuming LogicGridMap has a method to get colors
+# add_child(visual_renderer)
+</code></pre>
+<p>The returned <code>LogicGridMap</code> contains width, height, and per-tile tags based on the chosen profile. Additional map post-processing can run on the resulting resource as needed.</p>
+<h2>Integration Notes</h2>
+<ul>
+<li><strong>Headless Generation:</strong> This module is designed to work headlessly, meaning it doesn't require a graphical interface. This makes it perfect for generating maps in automated tests, server-side processes, or build pipelines.</li>
+<li><strong>Separation of Concerns:</strong> <code>ProceduralMapGenerator</code> focuses solely on the <em>logical</em> generation of the grid data (<code>LogicGridMap</code>). It does not handle the <em>visual</em> representation (3D models, textures). This separation allows for flexible visual layers to be built on top of the generated data.</li>
+<li><strong>Deterministic Output:</strong> The <code>seed</code> parameter is crucial for deterministic generation. Using the same seed with the same parameters will always produce an identical map. This is invaluable for debugging, testing, and competitive play where fair, repeatable maps are required.</li>
+<li><strong>Integration with <code>MapGenerator</code>:</strong> While you can use <code>ProceduralMapGenerator</code> directly, the <code>MapGenerator</code> module provides a higher-level orchestration, combining procedural map generation with the <code>Tile to Gridmap</code> addon to produce a fully visual 3D <code>GridMap</code>.</li>
+</ul>
+<h2>Testing</h2>
+<p>To ensure the <code>ProceduralMapGenerator</code> functions correctly, execute its self-tests via the shared test runner:</p>
+<pre><code class="language-bash">godot4 --headless --path . --script scripts/test_runner.gd -- --module=procedural_map_generator
+</code></pre>
+<p>This command runs the tests headlessly, verifying that the module correctly generates maps with the specified parameters and terrain profiles.</p>

@@ -1,0 +1,252 @@
+<p>LogicGridMap (GDScript) — README
+A pure-logic tactical grid model for Godot 4.x.
+ This Resource tracks actor placement, movement costs, line of sight (LOS), zones of control (ZOC), flanking, and AOE queries. It’s intentionally render-free so you can plug it into any presentation layer (2D/3D, tilemap/meshes, etc.).
+TL;DR: Treat this as your “game rules database.” Feed it map metadata + actors, ask it questions (“can I see/shoot/move there?”), and then draw whatever you like in your scene tree.</p>
+<p>Contents
+●       Design Goals</p>
+<p>●       Coordinate System &amp; Terminology</p>
+<p>●       Data Model</p>
+<p>●       Actor Contract</p>
+<p>●       Core Features</p>
+<p>●       API Overview</p>
+<p>●       Usage Examples</p>
+<p>●       Pathfinding Details</p>
+<p>●       Line of Sight Details</p>
+<p>●       ZOC, Flanking &amp; AOE</p>
+<p>●       Performance Notes</p>
+<p>●       Serialization &amp; Save/Load</p>
+<p>●       Extending &amp; Modding</p>
+<p>●       Troubleshooting Guide</p>
+<p>●       Testing Tips</p>
+<p>●       Roadmap / Ideas</p>
+<p>Design Goals
+●       Deterministic, presentation-agnostic rules.</p>
+<p>●       Supports multi-tile actors (e.g., 2×2 mechs).</p>
+<p>●       Cheap queries for common tactics (LOS/ZOC/cover).</p>
+<p>●       Single source of truth for tile metadata (height, cost, cover, tags).</p>
+<p>●       Simple to serialize (it’s a Resource).</p>
+<p>Coordinate System &amp; Terminology
+●       Grid coordinates are Vector2i (x, y) in cell units.</p>
+<p>●       Top-left origin; x → right, y → down (Godot default).</p>
+<p>●       Distances:</p>
+<p>○       Manhattan for “taxicab” distance (|Δx| + |Δy|).</p>
+<p>○       Chebyshev for square radius (max(|Δx|, |Δy|)), also used as A* heuristic.</p>
+<p>●       Footprint: the set of tiles an actor occupies (size Vector2i(w, h)), with the origin at the top-left tile.</p>
+<p>Data Model
+Map bounds
+●       width, height (in cells). is_in_bounds(pos) guards everything.</p>
+<p>Occupancy &amp; positions
+●       occupied : Dictionary[Vector2i, Object]
+ Maps each occupied tile → actor Object. Multi-tile actors will appear multiple times with the same Object value.</p>
+<p>●       actor_positions : Dictionary[Object, Vector2i]
+ Reverse lookup: actor → origin tile.</p>
+<p>⚠️ Keys are Object references. Prefer stable game objects (Nodes, ScriptedResources) that persist while on the grid.
+Terrain &amp; metadata
+●       movement_costs : Dictionary[Vector2i, float] — default 1.0; use INF for impassable.</p>
+<p>●       height_levels : Dictionary[Vector2i, int] — default 0.</p>
+<p>●       covers : Dictionary[Vector2i, Dictionary] — <code>{type, direction, height}</code>.</p>
+<p>●       los_blockers : Dictionary[Vector2i, bool] — hard LOS blockers.</p>
+<p>●       tile_tags : Dictionary[Vector2i, Array[String]] — arbitrary tags (e.g. "grass", "smoke").</p>
+<p>Movement constants
+●       MAX_CLIMB_HEIGHT := 1</p>
+<p>●       CLIMB_COST := 2.0 per level climbed</p>
+<p>●       TURN_COST := 0.7 when facing changes during pathfinding</p>
+<p>Actor Contract
+Actors are plain Objects expected to expose:
+●       grid_pos : Vector2i (origin tile; updated by move_actor)</p>
+<p>●       size : Vector2i (default Vector2i(1,1))</p>
+<p>●       facing : Vector2i (e.g., Vector2i.RIGHT, default RIGHT)</p>
+<p>●       Optional: a set(property, value) method (so move_actor can set grid_pos).</p>
+<p>The grid does not require actors to be Nodes; any object with those properties works.</p>
+<p>Core Features
+●       Safe placement &amp; movement for single or multi-tile actors.</p>
+<p>●       Heuristic A* pathfinding with:</p>
+<p>○       diagonal steps (cost multiplier 1.4),</p>
+<p>○       per-tile movement cost,</p>
+<p>○       height climb limits and cost,</p>
+<p>○       turn cost based on heading changes,</p>
+<p>○       actor footprint collision checks.</p>
+<p>●       LOS via Bresenham with diagonal-corner checks and cover/LOS blockers.</p>
+<p>●       Range queries (tiles/actors within Chebyshev range, optional LOS).</p>
+<p>●       Tactical helpers: ZOC (by arcs), flanking, attack arcs (front/left/right/rear).</p>
+<p>●       AOE helpers: burst, cone, line, wall.</p>
+<p>API Overview
+Bounds &amp; occupancy
+●       is_in_bounds(pos: Vector2i) -&gt; bool</p>
+<p>●       is_occupied(pos: Vector2i) -&gt; bool</p>
+<p>●       move_actor(actor: Object, to: Vector2i) -&gt; bool</p>
+<p>●       remove_actor(actor: Object) -&gt; void</p>
+<p>●       get_actor_at(pos: Vector2i) -&gt; Object | null</p>
+<p>●       get_all_actors() -&gt; Array[Object]</p>
+<p>●       get_occupied_tiles(actor: Object) -&gt; Array[Vector2i]</p>
+<p>Distances
+●       get_distance(a, b) -&gt; int (Manhattan)</p>
+<p>●       get_chebyshev_distance(a, b) -&gt; int</p>
+<p>Line of sight
+●       set_los_blocker(pos, blocks := true)</p>
+<p>●       is_los_blocker(pos) -&gt; bool</p>
+<p>●       has_line_of_sight(a, b) -&gt; bool</p>
+<p>Range
+●       get_actors_in_radius(center, radius, require_los := false) -&gt; Array[Object]</p>
+<p>●       get_positions_in_range(center, range_val, require_los := false) -&gt; Array[Vector2i]</p>
+<p>Pathfinding
+●       find_path_for_actor(actor, start, goal) -&gt; Array[Vector2i]</p>
+<p>●       find_path(start, start_facing, goal, actor_size := Vector2i(1,1)) -&gt; Array[Vector2i]</p>
+<p>AOE
+●       get_aoe_tiles(shape: "burst"|"cone"|"line"|"wall", origin, direction, range) -&gt; Array[Vector2i]</p>
+<p>Tactics
+●       get_zone_of_control(actor, radius := 1, arc := "all") -&gt; Array[Vector2i]
+ Arcs: "all"|"front"|"rear"|"left"|"right"|"sides".</p>
+<p>●       get_tiles_under_zoc(radius := 1, arc := "all") -&gt; Array[Vector2i]</p>
+<p>●       actor_in_zoc(defender, threat_actor, radius := 1, arc := "all") -&gt; bool</p>
+<p>●       get_threatened_tiles_by(actor, radius := 1, arc := "all") -&gt; Array[Vector2i]</p>
+<p>●       get_attack_arc(defender, attacker) -&gt; String ("front"|"rear"|"left"|"right"|"none")</p>
+<p>●       is_flanked(actor) -&gt; bool</p>
+<p>Terrain, tags &amp; cover
+●       set_movement_cost(pos, cost) / get_movement_cost(pos) -&gt; float</p>
+<p>●       set_height(pos, level) / get_height(pos) -&gt; int</p>
+<p>●       add_tile_tag(pos, tag) / remove_tile_tag(pos, tag) / has_tile_tag(pos, tag) -&gt; bool</p>
+<p>●       set_cover(pos, type, direction, height := 1) / get_cover(pos) -&gt; Dictionary</p>
+<p>Usage Examples
+1) Creating &amp; seeding a grid
+var grid := LogicGridMap.new()
+grid.width = 32
+grid.height = 24</p>
+<h1>Terrain:</h1>
+<p>for x in range(32):
+    grid.set_height(Vector2i(x, 10), 1) # a ridge line
+    grid.set_movement_cost(Vector2i(x, 10), 2.0)
+grid.set_cover(Vector2i(5, 5), "full", "north")
+grid.set_los_blocker(Vector2i(6, 5), true)
+grid.add_tile_tag(Vector2i(4, 4), "forest")</p>
+<p>2) Registering actors &amp; moving them</p>
+<h1>Example actor (Node or any Object with the required properties)</h1>
+<p>var soldier := {
+    "grid_pos": Vector2i(2, 2),
+    "size": Vector2i(1, 1),
+    "facing": Vector2i.RIGHT
+}</p>
+<h1>Place</h1>
+<p>var placed := grid.move_actor(soldier, Vector2i(2, 2))
+assert(placed)</p>
+<h1>Pathfind and then move step-by-step</h1>
+<p>var goal := Vector2i(12, 7)
+var path := grid.find_path_for_actor(soldier, soldier["grid_pos"], goal)
+for step in path.slice(1, path.size()): # skip current tile
+    grid.move_actor(soldier, step)</p>
+<p>3) LOS and tactical checks
+var enemy := {"grid_pos": Vector2i(10, 7), "size": Vector2i(1,1), "facing": Vector2i.LEFT}
+grid.move_actor(enemy, enemy["grid_pos"])</p>
+<p>var can_see := grid.has_line_of_sight(soldier["grid_pos"], enemy["grid_pos"])
+var in_enemy_zoc := grid.actor_in_zoc(soldier, enemy)
+var arc := grid.get_attack_arc(enemy, soldier)
+var flanked := grid.is_flanked(enemy)</p>
+<p>4) AOE selection
+var cone_tiles := grid.get_aoe_tiles("cone", origin=enemy["grid_pos"], direction=Vector2i.LEFT, range=5)</p>
+<p>Pathfinding Details
+●       Algorithm: A* over 8 neighbors (cardinal + diagonal).</p>
+<p>●       Costs:</p>
+<p>○       Base step: get_movement_cost(tile) (impassable if &gt;= INF).</p>
+<p>○       Diagonals: multiplier 1.4 (approx √2).</p>
+<p>○       Climb: height_diff * CLIMB_COST (if height_diff &gt; 0).</p>
+<p>○       Facing: TURN_COST when the movement direction ≠ current facing.</p>
+<p>●       Facing state: During expansion, facing is derived from edge direction. The initial node uses start_facing.</p>
+<p>●       Footprint validation: For each neighbor, every tile in the footprint must be in-bounds and unoccupied except:</p>
+<p>○       The goal is allowed even if currently occupied (so you can path to a currently blocked goal).</p>
+<p>●       Success: Reconstructs path when current == goal. If start is unreachable from goal, returns [].</p>
+<p>Tip: For large maps, consider an open set as a binary heap and a closed set to lower CPU churn if you profile hot spots.</p>
+<p>Line of Sight Details
+●       Bresenham line from A → B.</p>
+<p>●       A line is blocked if any intermediate tile (not endpoints) is:</p>
+<p>○       occupied,</p>
+<p>○       flagged as los_blocker, or</p>
+<p>○       has cover == "full".</p>
+<p>●       Diagonal corner rule: when the ray steps diagonally, it checks both adjacent orthogonal corner tiles to prevent peeking “through corners.”</p>
+<p>Note: Endpoints are always considered visible to themselves. If you want “target in hard cover blocks LOS at the target,” extend the rule to include pos == b.</p>
+<p>ZOC, Flanking &amp; AOE
+●       ZOC: Based on actor border tiles (so large units project ZOC from their perimeter) and the requested arc.</p>
+<p>○       Arc thresholds (cosine-like): FRONT_T = 0.25, SIDE_T = 0.25 (~±75° front, ~±75° sides).</p>
+<p>○       Arcs: "front", "rear", "left", "right", "sides", "all".</p>
+<p>●       Flanking: An actor is flanked if ≥2 attackers threaten it (in ZOC) and their direction vectors relative to the defender are nearly opposite (dot &lt; -0.9).</p>
+<p>●       Attack arc: front/left/right/rear computed from defender’s facing vs vector to attacker (using angle_to).</p>
+<p>AOE shapes
+●       burst: square radius using Chebyshev distance (via get_positions_in_range).</p>
+<p>●       cone: forward-biased using a dot-product threshold (&gt; 0.7 ≈ 90° total spread). Distance check currently uses Manhattan; see “Roadmap” for alternatives.</p>
+<p>●       line: 1-tile line along direction, length n.</p>
+<p>●       wall: line perpendicular to direction, centered at origin, total length.</p>
+<p>Performance Notes
+●       Dictionaries keyed by Vector2i are efficient in GDScript 2, but tight loops over big maps can still be hot.</p>
+<p>●       Avoid frequent get_all_actors() in per-frame code; cache if needed.</p>
+<p>●       Terrain metadata lookups are O(1).</p>
+<p>●       A* uses a linear search over open_set for the best node. For very large searches, swap to a binary heap (priority queue) in GDScript or C#.</p>
+<p>●       For multi-tile actors, footprint checks multiply the cost of neighbor evaluation. Consider lowering neighbor set (no diagonals) if needed.</p>
+<p>Serialization &amp; Save/Load
+Being a Resource, this is straightforward:</p>
+<h1>Save</h1>
+<p>ResourceSaver.save(grid, "user://tactical_grid.tres")</p>
+<h1>Load</h1>
+<p>var grid := load("user://tactical_grid.tres") as LogicGridMap</p>
+<p>If actors are Nodes, store a stable identifier (UUID, name path) outside the grid and re-bind after load. The grid only stores Object references; those won’t survive a fresh run unless they’re re-created.</p>
+<p>Extending &amp; Modding
+●       Alternate heuristics: Replace get_chebyshev_distance with octile or weighted Manhattan.</p>
+<p>●       Custom cover rules: <code>covers</code> already track facing and height; override <code>get_cover_modifier</code> for advanced effects.</p>
+<p>●       Opportunity attacks: Use get_tiles_under_zoc to detect movement through enemy ZOCs.</p>
+<p>●       Terrain effects: Leverage tile_tags (e.g., "mud" → extra TURN_COST, "ice" → forced slide, "smoke" → temporary los_blocker).</p>
+<p>●       Team/faction logic: Wrap public API to filter threat checks by allegiance.</p>
+<p>Troubleshooting Guide
+“move_actor returns false unexpectedly”
+●       Destination footprint out of bounds or collides with another actor.</p>
+<p>●       For multi-tile actors, every tile is validated; check all tiles in get_tiles_for_footprint(to, size).</p>
+<p>“Actors disappear or duplicate in get_all_actors()”
+●       Ensure actors are removed via remove_actor(actor) before freeing the underlying Node.</p>
+<p>●       Don’t reuse the same Object for multiple entities simultaneously.</p>
+<p>“Pathfinding can’t find a path that looks obvious”
+●       Any tile along the route may have INF movement cost (impassable) or height_diff &gt; MAX_CLIMB_HEIGHT.</p>
+<p>●       Goal is allowed even if occupied, but intermediate nodes are not.</p>
+<p>●       If facing changes are expensive, TURN_COST might discourage turning; try lowering TURN_COST.</p>
+<p>“LOS is blocked when it shouldn’t be”
+●       Check for diagonal corner cases—two corners adjacent to a diagonal step can block LOS.</p>
+<p>●       Tiles with cover == "full" also block LOS (by design). Change if you want “cover reduces hit % but not LOS.”</p>
+<p>“ZOC/Flanking feel too permissive/restrictive”
+●       Tweak arc thresholds in get_zone_of_control (FRONT_T, SIDE_T) or the flank dot (-0.9).</p>
+<p>Testing Tips
+●       Unit tests (e.g., with [GUT] or @tool scripts):</p>
+<p>○       Map edges: is_in_bounds, placing actors at borders.</p>
+<p>○       Multi-tile: footprints across obstacles; movement into tight corridors.</p>
+<p>○       LOS: rays grazing corners, blockers at endpoints vs intermediates.</p>
+<p>○       Costs: INF walls; climb limits; turn penalties.</p>
+<p>○       ZOC/Flank: arrange attackers at cardinal/diagonal positions and assert results.</p>
+<p>●       Golden paths: Precompute expected paths on small maps and compare arrays.</p>
+<p>Minimal example using built-in assertions:
+func test_basic_path() -&gt; void:
+    var g := LogicGridMap.new()
+    g.width = 8; g.height = 8
+    var a := {"grid_pos": Vector2i(1,1), "size": Vector2i(1,1), "facing": Vector2i.RIGHT}
+    assert(g.move_actor(a, a["grid_pos"]))
+    g.set_movement_cost(Vector2i(3,1), INF) # wall
+    var path := g.find_path_for_actor(a, a["grid_pos"], Vector2i(5,1))
+    assert(path.size() &gt; 0)
+    assert(path.front() == a["grid_pos"] and path.back() == Vector2i(5,1))</p>
+<p>Roadmap / Ideas
+●       Priority queue for A* open_set.</p>
+<p>●       Optional closed set and consistent heuristic toggles.</p>
+<p>●       Team/faction filters for ZOC &amp; flanking.</p>
+<p>●       Directional cover and elevation advantage in LOS/hit chance.</p>
+<p>●       Cone distance metric: switch from Manhattan to Chebyshev/Euclidean for smoother cones.</p>
+<p>●       Configurable diagonal movement (on/off) and corner cutting rules.</p>
+<p>Notes for Maintainers
+●       The script already fixes a few typed array pitfalls by constructing typed Array[T] explicitly (e.g., get_all_actors). Keep that pattern to avoid analyzer warnings.</p>
+<p>●       When adding new returns typed as Array[Vector2i]/Array[Object], explicitly type the local arrays and ensure all appends satisfy the type checker.</p>
+<p>●       Be mindful of Object keys in dictionaries: if you migrate to C# or use signals/threading, ensure you don’t accidentally duplicate or free keys while referenced.</p>
+<p>●       Internal helpers like _get_border_tiles and get_tiles_for_footprint form the backbone of multi-tile correctness—prefer extending them over inlining footprint logic elsewhere.</p>
+<p>License &amp; Attribution
+This README describes the LogicGridMap GDScript resource intended for Godot 4.x projects. Adapt freely within your project’s license. If you publish improvements, consider contributing a patch/readme update so others can benefit ❤️</p>
+<p>Quick Reference (Cheat Sheet)
+●       Place: move_actor(actor, pos)</p>
+<p>●       Remove: remove_actor(actor)</p>
+<p>●       Path: find_path_for_actor(actor, from, to)</p>
+<p>●       LOS: has_line_of_sight(a, b)</p>
+<p>●       AOE: get_aoe_tiles("cone"|"burst"|"line"|"wall", origin, dir, range)</p>
+<p>●       ZOC: get_zone_of_control(actor, r, "front"|...)</p>
+<p>●       Flank: is_flanked(actor)</p>
+<p>●       Terrain: set_movement_cost, set_height, set_cover, add_tile_tag</p>

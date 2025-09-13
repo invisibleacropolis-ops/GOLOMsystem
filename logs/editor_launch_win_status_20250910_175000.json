@@ -1,0 +1,10 @@
+{
+  "mode": "win",
+  "started_at": "2025-09-10T21:50:00.2120464Z",
+  "finished_at": "2025-09-10T17:50:00.4475813-04:00",
+  "exit_code": 0,
+  "crash_detected": false,
+  "log": "logs\\editor_launch_win_20250910_175000.log",
+  "latest": "logs/editor_launch_win.log",
+  "pass": true
+}

@@ -1,0 +1,240 @@
+[gd_scene load_steps=4 format=3 uid="uid://d0d0d0d0d0d0"]
+
+[ext_resource type="Script" path="res://scenes/ui/CharacterCreationGUI.gd" id="1_script"]
+[ext_resource type="Shader" path="res://shaders/procedural_background.gdshader" id="2_shader"]
+[ext_resource type="Theme" path="res://themes/character_creation_theme.tres" id="3_theme"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("2_shader")
+shader_parameter/time_scale = 0.1
+shader_parameter/noise_scale = 5.0
+shader_parameter/color_a = Color(0.1, 0.2, 0.3, 1.0)
+shader_parameter/color_b = Color(0.3, 0.5, 0.7, 1.0)
+
+[node name="CharacterCreationGUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+theme = ExtResource("3_theme")
+
+[node name="BackgroundPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ProceduralBackground" type="TextureRect" parent="BackgroundPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+material = SubResource("ShaderMaterial_1")
+
+[node name="NameInputStage" type="VBoxContainer" parent="BackgroundPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="InstructionsLabel" type="Label" parent="NameInputStage"]
+layout_mode = 2
+text = "Enter your character's name:"
+horizontal_alignment = 1
+
+[node name="NameLineEdit" type="LineEdit" parent="NameInputStage"]
+layout_mode = 2
+placeholder_text = "Character Name"
+text_align = 1
+
+[node name="ConfirmNameButton" type="Button" parent="NameInputStage"]
+layout_mode = 2
+text = "Confirm Name"
+
+[node name="AttributeDistributionStage" type="VBoxContainer" parent="BackgroundPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+visible = false # Initially hidden
+
+[node name="AttributeInstructionsLabel" type="Label" parent="AttributeDistributionStage"]
+layout_mode = 2
+text = "Distribute your attribute points:"
+horizontal_alignment = 1
+
+[node name="PointsRemainingLabel" type="Label" parent="AttributeDistributionStage"]
+layout_mode = 2
+text = "Points Remaining: 10"
+horizontal_alignment = 1
+
+[node name="AttributesContainer" type="VBoxContainer" parent="AttributeDistributionStage"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="ConfirmAttributesButton" type="Button" parent="AttributeDistributionStage"]
+layout_mode = 2
+text = "Confirm Attributes"
+
+[node name="BackFromAttributesButton" type="Button" parent="AttributeDistributionStage"]
+layout_mode = 2
+text = "Back"
+
+[node name="SkillSelectionStage" type="VBoxContainer" parent="BackgroundPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+visible = false # Initially hidden
+
+[node name="SkillInstructionsLabel" type="Label" parent="SkillSelectionStage"]
+layout_mode = 2
+text = "Select your skills:"
+horizontal_alignment = 1
+
+[node name="SkillList" type="ItemList" parent="SkillSelectionStage"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SkillDescriptionLabel" type="Label" parent="SkillSelectionStage"]
+layout_mode = 2
+text = "Skill Description:"
+autowrap_mode = 2
+
+[node name="ConfirmSkillsButton" type="Button" parent="SkillSelectionStage"]
+layout_mode = 2
+text = "Confirm Skills"
+
+[node name="BackFromSkillsButton" type="Button" parent="SkillSelectionStage"]
+layout_mode = 2
+text = "Back"
+
+[node name="PowerSelectionStage" type="VBoxContainer" parent="BackgroundPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+visible = false # Initially hidden
+
+[node name="PowerInstructionsLabel" type="Label" parent="PowerSelectionStage"]
+layout_mode = 2
+text = "Select your powers:"
+horizontal_alignment = 1
+
+[node name="PowerList" type="ItemList" parent="PowerSelectionStage"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PowerDescriptionLabel" type="Label" parent="PowerSelectionStage"]
+layout_mode = 2
+text = "Power Description:"
+autowrap_mode = 2
+
+[node name="ConfirmPowersButton" type="Button" parent="PowerSelectionStage"]
+layout_mode = 2
+text = "Confirm Powers"
+
+[node name="BackFromPowersButton" type="Button" parent="PowerSelectionStage"]
+layout_mode = 2
+text = "Back"
+
+[node name="ConfirmationStage" type="VBoxContainer" parent="BackgroundPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 0
+visible = false # Initially hidden
+
+[node name="SummaryLabel" type="Label" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Character Summary:"
+horizontal_alignment = 1
+
+[node name="NameSummaryLabel" type="Label" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Name:"
+
+[node name="AttributesSummaryLabel" type="Label" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Attributes:"
+
+[node name="SkillsSummaryLabel" type="Label" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Skills:"
+
+[node name="PowersSummaryLabel" type="Label" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Powers:"
+
+[node name="ConfirmCharacterButton" type="Button" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Confirm Character"
+
+[node name="CancelCharacterButton" type="Button" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Cancel Creation"
+
+[node name="EditAttributesButton" type="Button" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Edit Attributes"
+
+[node name="EditSkillsButton" type="Button" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Edit Skills"
+
+[node name="EditPowersButton" type="Button" parent="ConfirmationStage"]
+layout_mode = 2
+text = "Edit Powers"
